@@ -52,8 +52,12 @@ WSGI_APPLICATION = 'urlmonitor.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'urlmonitor'),
+        'USER': os.environ.get('DB_USER', 'urlmonitor'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'urlmonitor'),
+        'HOST': os.environ.get('DB_HOST', 'db'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
@@ -65,7 +69,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'es-mx'
-TIME_ZONE = 'America/Mexico_City'
+TIME_ZONE = os.environ.get('TIME_ZONE', 'Europe/Madrid')
 USE_I18N = True
 USE_TZ = True
 

@@ -88,8 +88,13 @@ su - deploy
 ## 5. Clonar el repositorio
 
 ```bash
+# Como root: dar permisos al usuario deploy sobre /opt
+chown deploy:deploy /opt
+
+# Cambiar al usuario deploy y clonar
+su - deploy
 cd /opt
-git clone https://github.com/<tu-usuario>/urlmonitor.git
+git clone https://github.com/falconsoft3d/urlmonitor.git
 cd urlmonitor
 ```
 
@@ -114,7 +119,14 @@ SECRET_KEY=pon-aqui-una-clave-secreta-muy-larga-y-aleatoria
 DEBUG=False
 ALLOWED_HOSTS=urlmonitor.xyz www.urlmonitor.xyz
 CSRF_TRUSTED_ORIGINS=https://urlmonitor.xyz https://www.urlmonitor.xyz
-TIME_ZONE=America/Mexico_City
+TIME_ZONE=Europe/Madrid
+
+# PostgreSQL
+DB_NAME=urlmonitor
+DB_USER=urlmonitor
+DB_PASSWORD=una-password-segura
+DB_HOST=db
+DB_PORT=5432
 ```
 
 > Genera una clave segura con:
@@ -297,18 +309,16 @@ docker compose exec nginx nginx -s reload
 
 ---
 
-## 14. Backup de la base de datos (SQLite)
-
-El archivo `db.sqlite3` vive en el volumen Docker `urlmonitor_sqlite_data`. Para hacer backup:
+## 14. Backup de la base de datos (PostgreSQL)
 
 ```bash
-docker compose exec web python manage.py dumpdata \
-  --natural-foreign --natural-primary \
-  --exclude auth.permission --exclude contenttypes \
-  -o /app/media/backup-$(date +%F).json
+# Dump SQL dentro del contenedor de Postgres
+docker compose exec db pg_dump -U urlmonitor urlmonitor \
+  > backup-$(date +%F).sql
 
-# Copiar al host
-docker cp urlmonitor_web:/app/media/backup-$(date +%F).json ./backup-$(date +%F).json
+# Restaurar desde un backup
+docker compose exec -T db psql -U urlmonitor urlmonitor \
+  < backup-2026-05-13.sql
 ```
 
 ---

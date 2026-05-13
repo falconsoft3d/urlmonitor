@@ -1,5 +1,24 @@
 services:
 
+  db:
+    image: postgres:16-alpine
+    container_name: urlmonitor_db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - urlmonitor_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   web:
     build: .
     image: urlmonitor:latest
@@ -7,12 +26,13 @@ services:
     restart: unless-stopped
     env_file: .env
     volumes:
-      - sqlite_data:/app/db.sqlite3
       - media_data:/app/media
       - static_data:/app/staticfiles
     expose:
       - "8000"
-    depends_on: []
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - urlmonitor_net
 
@@ -48,7 +68,7 @@ services:
              done"
 
 volumes:
-  sqlite_data:
+  postgres_data:
   media_data:
   static_data:
 
