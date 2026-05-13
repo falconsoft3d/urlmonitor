@@ -199,6 +199,62 @@
   {% endif %}
   {% endif %}
 
+  <!-- Heatmap de actividad estilo GitHub -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <h3 class="text-sm font-bold text-gray-800 mb-4">Actividad — últimos 365 días</h3>
+    <div class="overflow-x-auto">
+
+      <!-- Etiquetas de mes -->
+      <div class="relative h-4 mb-1 ml-7">
+        {% for ml in heatmap_month_labels %}
+        <span class="absolute text-xs text-gray-400 whitespace-nowrap leading-none"
+          style="left: {{ ml.offset_px }}px">{{ ml.label }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="flex gap-0.5">
+
+        <!-- Etiquetas de día de la semana -->
+        <div class="flex flex-col gap-0.5 mr-1 text-xs text-gray-300 leading-none shrink-0">
+          <span class="h-3 flex items-center">L</span>
+          <span class="h-3 flex items-center"></span>
+          <span class="h-3 flex items-center">X</span>
+          <span class="h-3 flex items-center"></span>
+          <span class="h-3 flex items-center">V</span>
+          <span class="h-3 flex items-center"></span>
+          <span class="h-3 flex items-center">D</span>
+        </div>
+
+        <!-- Columnas de semanas -->
+        {% for week in heatmap_weeks %}
+        <div class="flex flex-col gap-0.5">
+          {% for cell in week %}
+          {% if cell %}
+          <div class="w-3 h-3 rounded-sm cursor-default transition-opacity hover:opacity-75
+            {% if cell.status == 'ok' %}bg-green-500
+            {% elif cell.status == 'error' %}bg-red-400
+            {% else %}bg-gray-100{% endif %}"
+            title="{{ cell.date }}{% if cell.status == 'ok' %} — OK{% elif cell.status == 'error' %} — Error{% else %} — Sin datos{% endif %}">
+          </div>
+          {% else %}
+          <div class="w-3 h-3"></div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% endfor %}
+
+      </div>
+
+      <!-- Leyenda -->
+      <div class="flex items-center gap-2 mt-3 text-xs text-gray-400">
+        <div class="w-3 h-3 rounded-sm bg-gray-100 shrink-0"></div><span>Sin datos</span>
+        <div class="w-3 h-3 rounded-sm bg-green-500 shrink-0 ml-2"></div><span>OK</span>
+        <div class="w-3 h-3 rounded-sm bg-red-400 shrink-0 ml-2"></div><span>Error</span>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Logs -->
   <div>
     <div class="flex items-center justify-between mb-3">

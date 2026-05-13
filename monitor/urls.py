@@ -14,6 +14,7 @@ urlpatterns = [
     path('urls/<int:pk>/analizar/', views.url_analyze, name='url_analyze'),
     path('logs/', views.log_list, name='log_list'),
     path('errores/', views.error_list, name='error_list'),
+    path('errores/marcar-leidos/', views.error_mark_read, name='error_mark_read'),
     path('config/verificacion/', views.config_schedule, name='config_schedule'),
     path('config/telegram/', views.config_telegram, name='config_telegram'),
     path('config/telegram/test/', views.telegram_test, name='telegram_test'),

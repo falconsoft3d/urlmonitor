@@ -291,6 +291,13 @@ def error_list(request):
     })
 
 
+@login_required
+def error_mark_read(request):
+    if request.method == 'POST':
+        request.session['errors_acknowledged_at'] = timezone.now().isoformat()
+    return redirect('error_list')
+
+
 def _staff_required(user):
     return user.is_active and user.is_staff
 
@@ -298,6 +305,8 @@ def _staff_required(user):
 @login_required
 def url_detail(request, pk):
     from django.db.models import Avg, Count, Q
+    from datetime import date as date_type, timedelta
+    from collections import defaultdict
     monitored_url = _get_url_or_404(pk, request)
     all_logs = monitored_url.logs.all()
     logs = all_logs[:50]
@@ -321,7 +330,6 @@ def url_detail(request, pk):
     first_ok = all_logs.filter(status=MonitoredURL.STATUS_ACTIVE).order_by('checked_at').first()
     reference = None
     if last_failure:
-        # Busca el primer check exitoso DESPUÉS de la última caída
         ok_after = all_logs.filter(
             status=MonitoredURL.STATUS_ACTIVE,
             checked_at__gt=last_failure.checked_at
@@ -343,6 +351,59 @@ def url_detail(request, pk):
         else:
             uptime_label = f'{minutes} minuto{"s" if minutes != 1 else ""}'
 
+    # ── Heatmap 365 días ──────────────────────────────────────────────────────
+    heatmap_end = timezone.now().date()
+    heatmap_start = heatmap_end - timedelta(days=364)
+
+    # Agrupa logs por fecha → estado predominante del día
+    raw = monitored_url.logs.filter(
+        checked_at__date__gte=heatmap_start,
+        checked_at__date__lte=heatmap_end,
+    ).values('checked_at__date', 'status')
+
+    day_counts = defaultdict(lambda: {'ok': 0, 'error': 0})
+    for entry in raw:
+        if entry['status'] == MonitoredURL.STATUS_ACTIVE:
+            day_counts[entry['checked_at__date']]['ok'] += 1
+        else:
+            day_counts[entry['checked_at__date']]['error'] += 1
+
+    # Lista plana de celdas con padding inicial para alinear al lunes
+    first_weekday = heatmap_start.weekday()  # 0=Lun
+    cells = [None] * first_weekday
+    for i in range(365):
+        d = heatmap_start + timedelta(days=i)
+        if d in day_counts:
+            s = 'error' if day_counts[d]['error'] > 0 else 'ok'
+        else:
+            s = 'none'
+        cells.append({'date': str(d), 'status': s})
+
+    # Rellena para completar la última semana
+    while len(cells) % 7 != 0:
+        cells.append(None)
+
+    # Organiza en semanas: heatmap_weeks[semana] = lista de 7 celdas
+    num_weeks = len(cells) // 7
+    heatmap_weeks = [cells[w * 7:(w + 1) * 7] for w in range(num_weeks)]
+
+    # Etiquetas de mes: primera semana en que aparece cada mes
+    seen_months = {}
+    for w_idx, week in enumerate(heatmap_weeks):
+        for cell in week:
+            if cell is not None:
+                cell_date = date_type.fromisoformat(cell['date'])
+                m = cell_date.month
+                if m not in seen_months:
+                    # offset_px: cada columna = 14px (12px celda + 2px gap)
+                    seen_months[m] = {
+                        'label': cell_date.strftime('%b'),
+                        'offset_px': w_idx * 14,
+                    }
+                break
+    heatmap_month_labels = sorted(seen_months.values(), key=lambda x: x['offset_px'])
+    # ─────────────────────────────────────────────────────────────────────────
+
     form = MonitoredURLForm(instance=monitored_url)
     return render(request, 'monitor/url_detail.html', {
         'monitored_url': monitored_url,
@@ -355,6 +416,8 @@ def url_detail(request, pk):
         'avg_response': avg_response,
         'last_failures': last_failures,
         'uptime_label': uptime_label,
+        'heatmap_weeks': heatmap_weeks,
+        'heatmap_month_labels': heatmap_month_labels,
     })
 
 
@@ -501,6 +564,8 @@ def url_toggle_public(request, pk):
 def url_public(request, token):
     """Página pública sin login — para compartir con clientes."""
     from django.db.models import Avg
+    from datetime import date as date_type, timedelta
+    from collections import defaultdict
     monitored_url = get_object_or_404(MonitoredURL, public_token=token, is_public=True)
     all_logs = monitored_url.logs.all()
 
@@ -540,6 +605,53 @@ def url_public(request, token):
         else:
             uptime_label = f'{minutes} minuto{"s" if minutes != 1 else ""}'
 
+    # ── Heatmap 365 días ──────────────────────────────────────────────────────
+    heatmap_end = timezone.now().date()
+    heatmap_start = heatmap_end - timedelta(days=364)
+
+    raw = monitored_url.logs.filter(
+        checked_at__date__gte=heatmap_start,
+        checked_at__date__lte=heatmap_end,
+    ).values('checked_at__date', 'status')
+
+    day_counts = defaultdict(lambda: {'ok': 0, 'error': 0})
+    for entry in raw:
+        if entry['status'] == MonitoredURL.STATUS_ACTIVE:
+            day_counts[entry['checked_at__date']]['ok'] += 1
+        else:
+            day_counts[entry['checked_at__date']]['error'] += 1
+
+    first_weekday = heatmap_start.weekday()
+    cells = [None] * first_weekday
+    for i in range(365):
+        d = heatmap_start + timedelta(days=i)
+        if d in day_counts:
+            s = 'error' if day_counts[d]['error'] > 0 else 'ok'
+        else:
+            s = 'none'
+        cells.append({'date': str(d), 'status': s})
+
+    while len(cells) % 7 != 0:
+        cells.append(None)
+
+    num_weeks = len(cells) // 7
+    heatmap_weeks = [cells[w * 7:(w + 1) * 7] for w in range(num_weeks)]
+
+    seen_months = {}
+    for w_idx, week in enumerate(heatmap_weeks):
+        for cell in week:
+            if cell is not None:
+                cell_date = date_type.fromisoformat(cell['date'])
+                m = cell_date.month
+                if m not in seen_months:
+                    seen_months[m] = {
+                        'label': cell_date.strftime('%b'),
+                        'offset_px': w_idx * 14,
+                    }
+                break
+    heatmap_month_labels = sorted(seen_months.values(), key=lambda x: x['offset_px'])
+    # ─────────────────────────────────────────────────────────────────────────
+
     return render(request, 'monitor/url_public.html', {
         'monitored_url': monitored_url,
         'total_checks': total_checks,
@@ -550,6 +662,8 @@ def url_public(request, token):
         'last_failures': last_failures,
         'recent_logs': recent_logs,
         'uptime_label': uptime_label,
+        'heatmap_weeks': heatmap_weeks,
+        'heatmap_month_labels': heatmap_month_labels,
     })
 
 
