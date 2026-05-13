@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}URLMonitor — Monitorea tus sitios web{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="text-center py-16 lg:py-24">
+  <div class="inline-flex items-center justify-center w-20 h-20 bg-indigo-100 rounded-2xl mb-6 shadow-inner">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  </div>
+
+  <h1 class="text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
+    Controla tus URLs<br />
+    <span class="text-indigo-600">en un solo lugar</span>
+  </h1>
+  <p class="text-xl text-gray-500 max-w-2xl mx-auto mb-10">
+    Registra tus sitios web y APIs, verifica si están activos al instante
+    y mantén un historial de disponibilidad desde un dashboard intuitivo.
+  </p>
+
+  {% if user.is_authenticated %}
+  <div class="flex flex-wrap gap-4 justify-center">
+    <a href="{% url 'dashboard' %}"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-semibold text-lg transition shadow-md">
+      Ir al Dashboard
+    </a>
+    <a href="{% url 'url_add' %}"
+      class="bg-white hover:bg-gray-50 text-indigo-600 border-2 border-indigo-600 px-8 py-3 rounded-xl font-semibold text-lg transition">
+      + Agregar URL
+    </a>
+  </div>
+  {% else %}
+  <div class="flex flex-wrap gap-4 justify-center">
+    <a href="{% url 'register' %}"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-semibold text-lg transition shadow-md">
+      Comenzar gratis
+    </a>
+    <a href="{% url 'login' %}"
+      class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-8 py-3 rounded-xl font-semibold text-lg transition">
+      Iniciar sesión
+    </a>
+  </div>
+  {% endif %}
+</section>
+
+<!-- Features -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-12">
+
+  <div class="bg-white rounded-2xl p-7 shadow-sm border border-gray-100 text-center">
+    <div class="inline-flex items-center justify-center w-14 h-14 bg-green-100 rounded-xl mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold text-gray-900 mb-2">Verificación instantánea</h3>
+    <p class="text-gray-500 text-sm leading-relaxed">
+      Comprueba en segundos si una URL responde correctamente o está caída.
+    </p>
+  </div>
+
+  <div class="bg-white rounded-2xl p-7 shadow-sm border border-gray-100 text-center">
+    <div class="inline-flex items-center justify-center w-14 h-14 bg-blue-100 rounded-xl mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold text-gray-900 mb-2">Dashboard centralizado</h3>
+    <p class="text-gray-500 text-sm leading-relaxed">
+      Visualiza todas tus URLs, su estado y tiempo de respuesta desde un único panel.
+    </p>
+  </div>
+
+  <div class="bg-white rounded-2xl p-7 shadow-sm border border-gray-100 text-center">
+    <div class="inline-flex items-center justify-center w-14 h-14 bg-purple-100 rounded-xl mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    </div>
+    <h3 class="text-lg font-bold text-gray-900 mb-2">Acceso seguro</h3>
+    <p class="text-gray-500 text-sm leading-relaxed">
+      Cada usuario gestiona únicamente sus propias URLs con autenticación protegida.
+    </p>
+  </div>
+
+</section>
+
+{% endblock %}

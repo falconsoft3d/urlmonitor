@@ -1,0 +1,44 @@
+{% extends 'base_app.html' %}
+{% block title %}Eliminar URL — URLMonitor{% endblock %}
+{% block page_title %}Eliminar URL{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+
+    <!-- Icon -->
+    <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-2xl mb-5">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    </div>
+
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Eliminar URL</h1>
+    <p class="text-gray-500 text-sm mb-2">
+      ¿Estás seguro de que deseas eliminar esta URL?
+    </p>
+    <div class="bg-gray-50 rounded-xl px-4 py-3 mb-6 text-left">
+      <p class="font-semibold text-gray-900 text-sm">{{ monitored_url.name }}</p>
+      <p class="text-gray-500 text-xs truncate mt-0.5">{{ monitored_url.url }}</p>
+    </div>
+    <p class="text-red-500 text-xs mb-6">Esta acción no se puede deshacer.</p>
+
+    <div class="flex gap-3">
+      <form method="post" class="flex-1">
+        {% csrf_token %}
+        <button type="submit"
+          class="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-xl font-semibold transition text-sm">
+          Sí, eliminar
+        </button>
+      </form>
+      <a href="{% url 'url_list' %}"
+        class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-semibold transition text-sm">
+        Cancelar
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
