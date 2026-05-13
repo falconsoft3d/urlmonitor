@@ -62,16 +62,12 @@
     .sched-btn.pressing .sched-inner-bg {
       background-color: rgba(99, 102, 241, 0.9) !important;
     }
-    /* Indeterminate progress bar */
-    @keyframes progress-indeterminate {
-      0%   { transform: translateX(-100%) scaleX(0.4); }
-      50%  { transform: translateX(0%)    scaleX(0.6); }
-      100% { transform: translateX(100%) scaleX(0.4); }
-    }
-    .animate-progress-indeterminate {
-      animation: progress-indeterminate 1.4s ease-in-out infinite;
-      transform-origin: left center;
-    }
+    /* Play icon: solo visible en hover y cuando NO está verificando */
+    .sched-play-icon { display: none; }
+    .sched-btn:hover .sched-play-icon { display: block; }
+    .sched-btn.is-checking .sched-play-icon { display: none !important; }
+    /* Ocultar contador min durante verificación */
+    .sched-btn.is-checking .sched-time-label { display: none; }
     /* Toast slide-in */
     @keyframes toast-in {
       from { opacity: 0; transform: translateX(1.5rem); }
@@ -253,40 +249,48 @@
   <div id="scheduler-widget" class="mx-3 my-3 bg-indigo-900/60 rounded-2xl px-4 py-4 sb-scheduler-widget">
     <p class="text-indigo-300 text-xs font-semibold uppercase tracking-widest mb-3 text-center">Próxima verificación</p>
     <div class="flex items-center justify-center">
-      <!-- SVG ring (clickable → verificar todas) -->
-      <a href="{% url 'url_check_all' %}"
-         title="Verificar todas ahora"
-         class="relative w-24 h-24 block group cursor-pointer sched-btn"
-         style="transition: transform 0.1s ease;">
-        <svg class="w-24 h-24 -rotate-90" viewBox="0 0 80 80">
-          <!-- track -->
-          <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="6"/>
-          <!-- progress ring -->
-          <circle id="sched-ring" cx="40" cy="40" r="34"
-            fill="none" stroke="#818cf8" stroke-width="6"
-            stroke-linecap="round"
-            stroke-dasharray="213.6"
-            stroke-dashoffset="213.6"
-            class="group-hover:stroke-indigo-300 transition-colors"
-            style="transition: stroke-dashoffset 1s linear;"/>
-        </svg>
-        <!-- inner circle background (cambia en hover/press) -->
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div class="w-14 h-14 rounded-full bg-indigo-800/60
-                      group-hover:bg-indigo-600/80
-                      transition-colors duration-150
-                      sched-inner-bg"></div>
-        </div>
-        <!-- center label -->
-        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span id="sched-mins" class="text-white text-2xl font-bold leading-none group-hover:hidden">--</span>
-          <span class="text-indigo-300 text-[10px] font-medium mt-0.5 group-hover:hidden">min</span>
-          <!-- Play icon on hover -->
-          <svg class="hidden group-hover:block h-8 w-8 text-white drop-shadow" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z"/>
+      <!-- SVG ring (form submit → interceptado por AJAX) -->
+      <form method="post" action="{% url 'url_check_all' %}" style="display:contents;">
+        {% csrf_token %}
+        <button type="submit" data-check-all
+           title="Verificar todas ahora"
+           class="relative w-24 h-24 block group cursor-pointer sched-btn"
+           style="background:none;border:none;padding:0;transition:transform 0.1s ease;">
+          <svg class="w-24 h-24 -rotate-90" viewBox="0 0 80 80">
+            <!-- track -->
+            <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="6"/>
+            <!-- progress ring -->
+            <circle id="sched-ring" cx="40" cy="40" r="34"
+              fill="none" stroke="#818cf8" stroke-width="6"
+              stroke-linecap="round"
+              stroke-dasharray="213.6"
+              stroke-dashoffset="213.6"
+              class="group-hover:stroke-indigo-300 transition-colors"
+              style="transition: stroke-dashoffset 1s linear;"/>
           </svg>
-        </div>
-      </a>
+          <!-- inner circle background -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="w-14 h-14 rounded-full bg-indigo-800/60
+                        group-hover:bg-indigo-600/80
+                        transition-colors duration-150
+                        sched-inner-bg"></div>
+          </div>
+          <!-- center label -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span id="sched-mins" class="sched-time-label text-white text-2xl font-bold leading-none group-hover:hidden">--</span>
+            <span id="sched-unit" class="sched-time-label text-indigo-300 text-[10px] font-medium mt-0.5 group-hover:hidden">min</span>
+            <!-- Spinner mientras verifica -->
+            <svg class="check-spinner hidden animate-spin h-8 w-8 text-white drop-shadow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <!-- Play icon: visible solo en hover via CSS (.sched-play-icon) -->
+            <svg class="sched-play-icon h-8 w-8 text-white drop-shadow" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        </button>
+      </form>
     </div>
     <p id="sched-status" class="text-center text-indigo-400 text-xs mt-3">Cargando...</p>
   </div>
@@ -470,10 +474,7 @@
   </script>
   {% endif %}
 
-  <!-- Progress bar (verificación en curso) -->
-  <div id="verify-progress-bar" class="hidden h-1 w-full bg-indigo-100 dark:bg-indigo-900 overflow-hidden">
-    <div class="h-full bg-indigo-500 animate-progress-indeterminate"></div>
-  </div>
+  <!-- Progress bar: se inyecta solo en dashboard.html -->
 
   <!-- Page content -->
   <main class="flex-1 px-4 sm:px-6 py-8">
@@ -553,6 +554,7 @@
     const CIRC = 2 * Math.PI * 34;   // 213.6 — must match stroke-dasharray
     const ring = document.getElementById('sched-ring');
     const minsEl = document.getElementById('sched-mins');
+    const unitEl = document.getElementById('sched-unit');
     const statusEl = document.getElementById('sched-status');
     const widget = document.getElementById('scheduler-widget');
 
@@ -571,14 +573,24 @@
     function tick() {
       if (remainSecs === null) return;
       remainSecs = Math.max(0, remainSecs - 1);
-      const mins = Math.ceil(remainSecs / 60);
-      minsEl.textContent = mins > 0 ? mins : '0';
+      if (remainSecs <= 10) {
+        // Últimos 10 segundos: mostrar cuenta regresiva en segundos
+        minsEl.textContent = remainSecs;
+        if (unitEl) unitEl.textContent = 'seg';
+      } else {
+        const mins = Math.ceil(remainSecs / 60);
+        minsEl.textContent = mins;
+        if (unitEl) unitEl.textContent = 'min';
+      }
       setRing(remainSecs, totalSecs);
       if (remainSecs === 0) {
         statusEl.textContent = 'Verificando ahora…';
         ring.style.stroke = '#34d399';   // green flash
-        setTimeout(fetchStatus, 3000);              // re-fetch ring after 3s
-        setTimeout(window.urlmonitorRefreshCounter || function(){}, 6000); // actualiza contador tras ~6s
+        // Lanzar la verificación AJAX con barra de progreso (btn=null → sin botón)
+        if (typeof window.urlmonitorRunVerifyAll === 'function') {
+          window.urlmonitorRunVerifyAll(null);
+        }
+        setTimeout(fetchStatus, 3000);  // re-fetch ring tras 3s
       }
     }
 
@@ -596,8 +608,13 @@
           }
           totalSecs = data.interval_minutes * 60;
           remainSecs = data.seconds_remaining;
-          const mins = Math.ceil(remainSecs / 60);
-          minsEl.textContent = mins > 0 ? mins : '0';
+          if (remainSecs <= 10) {
+            minsEl.textContent = remainSecs;
+            if (unitEl) unitEl.textContent = 'seg';
+          } else {
+            minsEl.textContent = Math.ceil(remainSecs / 60);
+            if (unitEl) unitEl.textContent = 'min';
+          }
           ring.style.stroke = '#818cf8';
           setRing(remainSecs, totalSecs);
           statusEl.textContent = 'Cada ' + data.interval_minutes + ' min';
@@ -681,49 +698,136 @@
       }, 5000);
     }
 
+    // ── Función central de verificación (usada por botón manual Y scheduler) ──
+    function runVerifyAll(btn) {
+      // btn puede ser null cuando lo llama el scheduler (no hay botón activo)
+      const progressFill  = document.getElementById('verify-progress-fill');
+      const progressLabel = document.getElementById('verify-progress-label');
+
+      function setProgress(done, total) {
+        if (!progressFill) return;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        progressFill.style.width = pct + '%';
+        if (progressLabel) progressLabel.textContent = done + ' / ' + total;
+      }
+
+      function showProgress(total, cb) {
+        const wrap = document.getElementById('verify-progress-wrap');
+        if (!progressFill) { if (cb) cb(); return; }
+        if (wrap) wrap.style.display = 'block';
+        progressFill.style.transition = 'none';
+        progressFill.style.width = '0%';
+        if (progressLabel) progressLabel.textContent = '0 / ' + (total || '…');
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            progressFill.style.transition = 'width 0.45s ease-out';
+            if (cb) cb();
+          });
+        });
+      }
+
+      function hideProgress() {
+        setTimeout(function () {
+          if (!progressFill) return;
+          progressFill.style.transition = 'width 0.45s ease-out';
+          progressFill.style.width = '0%';
+          if (progressLabel) progressLabel.textContent = '';
+          setTimeout(function () {
+            const wrap = document.getElementById('verify-progress-wrap');
+            if (wrap) wrap.style.display = 'none';
+          }, 500);
+        }, 600);
+      }
+
+      function setBtnState(checking, label) {
+        if (!btn) return;
+        btn.disabled = checking;
+        if (btn.classList.contains('sched-btn')) {
+          btn.classList.toggle('is-checking', checking);
+        }
+        btn.querySelectorAll('.check-icon').forEach(function (el) { el.classList.toggle('hidden', checking); });
+        btn.querySelectorAll('.check-spinner').forEach(function (el) { el.classList.toggle('hidden', !checking); });
+        btn.querySelectorAll('.check-label').forEach(function (el) {
+          if (checking) { el.dataset.orig = el.dataset.orig || el.textContent; el.textContent = label || 'Verificando…'; }
+          else { el.textContent = el.dataset.orig || 'Verificar todas'; }
+        });
+      }
+
+      setBtnState(true, 'Preparando…');
+      showProgress(null, null);
+
+      fetch('{% url "url_ids_json" %}')
+        .then(function (r) { return r.ok ? r.json() : Promise.reject('ids'); })
+        .then(function (data) {
+          const pks = data.pks || [];
+          const total = pks.length;
+          if (total === 0) {
+            setBtnState(false);
+            hideProgress();
+            return;
+          }
+
+          showProgress(total, function () {
+            let done = 0;
+            const startedAt = Date.now();
+            const MIN_VISIBLE_MS = 1200;
+            const MIN_STEP_MS = 350;
+
+            function checkNext(index) {
+              if (index >= total) {
+                setBtnState(false);
+                setProgress(total, total);
+                const elapsed = Date.now() - startedAt;
+                const wait = Math.max(500, MIN_VISIBLE_MS - elapsed);
+                setTimeout(function () {
+                  hideProgress();
+                  refreshCounter();
+                  showToast('Se verificaron ' + total + ' URL' + (total !== 1 ? 's' : '') + ' exitosamente.');
+                }, wait);
+                return;
+              }
+              const pk = pks[index];
+              const stepStart = Date.now();
+              setBtnState(true, 'Verificando ' + (index + 1) + '/' + total + '…');
+              fetch('/urls/' + pk + '/verificar-ajax/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+              })
+                .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                .then(function () {
+                  done++;
+                  setProgress(done, total);
+                  const stepElapsed = Date.now() - stepStart;
+                  setTimeout(function () { checkNext(index + 1); }, Math.max(0, MIN_STEP_MS - stepElapsed));
+                })
+                .catch(function () {
+                  done++;
+                  setProgress(done, total);
+                  const stepElapsed = Date.now() - stepStart;
+                  setTimeout(function () { checkNext(index + 1); }, Math.max(0, MIN_STEP_MS - stepElapsed));
+                });
+            }
+
+            checkNext(0);
+          });
+        })
+        .catch(function () {
+          setBtnState(false);
+          hideProgress();
+          showToast('Error al obtener las URLs.', 'error');
+        });
+    }
+
+    // Exponer globalmente para que el scheduler lo invoque
+    window.urlmonitorRunVerifyAll = runVerifyAll;
+
     // ── Interceptar todos los formularios "Verificar todas" ──
     document.querySelectorAll('form[action*="verificar-todas"]').forEach(function (form) {
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         const btn = form.querySelector('button[data-check-all]');
         if (!btn || btn.disabled) return;
-
-        const progressBar = document.getElementById('verify-progress-bar');
-
-        // Mostrar spinner + barra de progreso
-        btn.disabled = true;
-        btn.querySelectorAll('.check-icon').forEach(el => el.classList.add('hidden'));
-        btn.querySelectorAll('.check-spinner').forEach(el => el.classList.remove('hidden'));
-        btn.querySelectorAll('.check-label').forEach(el => { el.dataset.orig = el.textContent; el.textContent = 'Verificando…'; });
-        if (progressBar) progressBar.classList.remove('hidden');
-
-        function restoreBtn() {
-          btn.disabled = false;
-          btn.querySelectorAll('.check-icon').forEach(el => el.classList.remove('hidden'));
-          btn.querySelectorAll('.check-spinner').forEach(el => el.classList.add('hidden'));
-          btn.querySelectorAll('.check-label').forEach(el => { el.textContent = el.dataset.orig || 'Verificar todas'; });
-          if (progressBar) progressBar.classList.add('hidden');
-        }
-
-        fetch(AJAX_URL, {
-          method: 'POST',
-          headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
-        })
-          .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
-          .then(function (data) {
-            restoreBtn();
-            if (data.ok) {
-              if (counterEl) counterEl.textContent = data.checks_today;
-              const n = data.checked;
-              showToast('Se verificaron ' + n + ' URL' + (n !== 1 ? 's' : '') + ' exitosamente.');
-            } else {
-              showToast('Error al verificar las URLs.', 'error');
-            }
-          })
-          .catch(function () {
-            restoreBtn();
-            showToast('Error de conexión al verificar.', 'error');
-          });
+        runVerifyAll(btn);
       });
     });
   })();

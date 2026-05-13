@@ -10,6 +10,7 @@ urlpatterns = [
     path('urls/<int:pk>/verificar/', views.url_check, name='url_check'),
     path('urls/verificar-todas/', views.url_check_all, name='url_check_all'),
     path('urls/verificar-todas-ajax/', views.url_check_all_ajax, name='url_check_all_ajax'),
+    path('urls/ids/', views.url_ids_json, name='url_ids_json'),
     path('checks-today/', views.checks_today_json, name='checks_today_json'),
     path('urls/<int:pk>/verificar-ajax/', views.url_check_ajax, name='url_check_ajax'),
     path('urls/<int:pk>/detalle/', views.url_detail, name='url_detail'),

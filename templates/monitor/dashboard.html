@@ -4,6 +4,19 @@
 
 {% block content %}
 
+<!-- Barra de progreso (oculta por defecto, se muestra al verificar) -->
+<div id="verify-progress-wrap"
+     style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;pointer-events:none;">
+  <div style="width:100%;height:4px;background:rgba(99,102,241,0.25);overflow:hidden;">
+    <div id="verify-progress-fill"
+         style="height:100%;width:0%;background:#6366f1;border-radius:0 2px 2px 0;will-change:width;"></div>
+  </div>
+  <div id="verify-progress-label"
+       style="position:absolute;right:8px;top:6px;font-size:11px;font-weight:700;
+              color:#6366f1;white-space:nowrap;background:#fff;padding:0 4px;
+              border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,0.12);"></div>
+</div>
+
 <!-- Header -->
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
   <div>

@@ -235,6 +235,13 @@ def url_check_all(request):
 
 
 @login_required
+def url_ids_json(request):
+    """Devuelve la lista de PKs de URLs accesibles por el usuario actual."""
+    pks = list(_url_qs(request).values_list('pk', flat=True))
+    return JsonResponse({'pks': pks})
+
+
+@login_required
 def url_check_all_ajax(request):
     """AJAX: verifica todas las URLs y devuelve JSON con el conteo actualizado."""
     if request.method != 'POST':
