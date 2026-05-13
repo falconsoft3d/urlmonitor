@@ -267,6 +267,30 @@ def log_list(request):
     })
 
 
+@login_required
+def error_list(request):
+    today = timezone.now().date()
+    if request.user.is_staff:
+        qs = CheckLog.objects.filter(
+            status=MonitoredURL.STATUS_INACTIVE,
+            checked_at__date=today,
+        ).select_related('monitored_url')
+    else:
+        qs = CheckLog.objects.filter(
+            status=MonitoredURL.STATUS_INACTIVE,
+            checked_at__date=today,
+            monitored_url__users=request.user,
+        ).select_related('monitored_url')
+    paginator = Paginator(qs, 40)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'monitor/error_list.html', {
+        'page_obj': page_obj,
+        'total': paginator.count,
+        'today': today,
+    })
+
+
 def _staff_required(user):
     return user.is_active and user.is_staff
 

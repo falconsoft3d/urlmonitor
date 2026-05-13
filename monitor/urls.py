@@ -13,6 +13,7 @@ urlpatterns = [
     path('urls/<int:pk>/detalle/', views.url_detail, name='url_detail'),
     path('urls/<int:pk>/analizar/', views.url_analyze, name='url_analyze'),
     path('logs/', views.log_list, name='log_list'),
+    path('errores/', views.error_list, name='error_list'),
     path('config/verificacion/', views.config_schedule, name='config_schedule'),
     path('config/telegram/', views.config_telegram, name='config_telegram'),
     path('config/telegram/test/', views.telegram_test, name='telegram_test'),
