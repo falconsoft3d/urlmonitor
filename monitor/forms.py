@@ -71,3 +71,17 @@ class TelegramConfigForm(forms.ModelForm):
                 'class': 'w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500',
             }),
         }
+
+
+class RegistrationConfigForm(forms.ModelForm):
+    class Meta:
+        model = SiteConfig
+        fields = ['registration_enabled']
+        labels = {
+            'registration_enabled': 'Permitir registro de nuevos usuarios',
+        }
+        widgets = {
+            'registration_enabled': forms.CheckboxInput(attrs={
+                'class': 'w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500',
+            }),
+        }
