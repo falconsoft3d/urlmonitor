@@ -13,6 +13,7 @@ urlpatterns = [
     path('logs/', views.log_list, name='log_list'),
     path('config/verificacion/', views.config_schedule, name='config_schedule'),
     path('config/telegram/', views.config_telegram, name='config_telegram'),
+    path('config/usuarios/', views.config_users, name='config_users'),
     path('scheduler-status/', views.scheduler_status, name='scheduler_status'),
     path('urls/<int:pk>/toggle-publico/', views.url_toggle_public, name='url_toggle_public'),
     path('public/<uuid:token>/', views.url_public, name='url_public'),

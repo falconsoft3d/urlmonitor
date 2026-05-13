@@ -1,7 +1,7 @@
 {% extends "base_app.html" %}
 
-{% block title %}Verificación Automática — URLMonitor{% endblock %}
-{% block page_title %}Configuración — Verificación automática{% endblock %}
+{% block title %}Usuarios — URLMonitor{% endblock %}
+{% block page_title %}Configuración — Usuarios{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
@@ -12,13 +12,13 @@
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
     </svg>
-    <span class="text-indigo-600 font-semibold">Verificación automática</span>
+    <span class="text-indigo-600 font-semibold">Usuarios</span>
   </nav>
 
   <!-- Config tabs -->
   <div class="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
     <a href="{% url 'config_schedule' %}"
-      class="px-4 py-2 rounded-lg text-sm font-medium bg-white text-indigo-700 shadow-sm">
+      class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition">
       Programación
     </a>
     <a href="{% url 'config_telegram' %}"
@@ -26,7 +26,7 @@
       Telegram
     </a>
     <a href="{% url 'config_users' %}"
-      class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition">
+      class="px-4 py-2 rounded-lg text-sm font-medium bg-white text-indigo-700 shadow-sm">
       Usuarios
     </a>
   </div>
@@ -38,36 +38,29 @@
       <!-- Status badge -->
       <div class="px-6 py-5 flex items-center justify-between">
         <div>
-          <h2 class="text-base font-bold text-gray-800">Verificación automática</h2>
-          <p class="text-sm text-gray-500 mt-0.5">El sistema verificará todas las URLs del sistema periódicamente.</p>
+          <h2 class="text-base font-bold text-gray-800">Registro de nuevos usuarios</h2>
+          <p class="text-sm text-gray-500 mt-0.5">Controla si los usuarios pueden crear cuentas nuevas.</p>
         </div>
-        {% if config.auto_check_enabled %}
+        {% if config.registration_enabled %}
         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
-          <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span> Activa
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span> Abierto
         </span>
         {% else %}
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
-          <span class="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span> Inactiva
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span> Cerrado
         </span>
         {% endif %}
       </div>
 
-      <!-- Enable toggle -->
+      <!-- Toggle -->
       <div class="px-6 py-5">
         <label class="flex items-center gap-4 cursor-pointer select-none">
-          {{ form.auto_check_enabled }}
+          {{ form.registration_enabled }}
           <div>
-            <p class="text-sm font-semibold text-gray-800">{{ form.auto_check_enabled.label }}</p>
-            <p class="text-xs text-gray-400 mt-0.5">Cuando esté activa, el scheduler correrá en segundo plano.</p>
+            <p class="text-sm font-semibold text-gray-800">{{ form.registration_enabled.label }}</p>
+            <p class="text-xs text-gray-400 mt-0.5">Si está desactivado, la página de registro mostrará un mensaje de acceso cerrado.</p>
           </div>
         </label>
-      </div>
-
-      <!-- Interval selector -->
-      <div class="px-6 py-5">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">{{ form.check_interval_minutes.label }}</label>
-        {{ form.check_interval_minutes }}
-        <p class="text-xs text-gray-400 mt-2">El intervalo se aplica a todas las URLs del sistema.</p>
       </div>
 
       <!-- Info box -->
@@ -78,9 +71,8 @@
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <p class="text-xs text-indigo-700">
-            El scheduler corre mientras el servidor esté activo. Si reinicias el servidor,
-            la programación se reactiva automáticamente con la última configuración guardada.
-            Para producción usa <strong>Celery Beat</strong> o un <strong>cron job</strong>.
+            Aunque el registro esté cerrado, los administradores pueden crear usuarios desde
+            <a href="{% url 'user_list' %}" class="underline font-semibold">Administración → Usuarios</a>.
           </p>
         </div>
       </div>

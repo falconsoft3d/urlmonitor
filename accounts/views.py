@@ -22,6 +22,10 @@ def register_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
+    from monitor.models import SiteConfig
+    if not SiteConfig.get().registration_enabled:
+        return render(request, 'accounts/register.html', {'registration_closed': True})
+
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():

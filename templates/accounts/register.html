@@ -17,6 +17,23 @@
       <p class="text-gray-500 text-sm mt-1">Regístrate para comenzar a monitorear tus URLs</p>
     </div>
 
+    {% if registration_closed %}
+    <!-- Registration closed -->
+    <div class="text-center py-4">
+      <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-11a9 9 0 100 18 9 9 0 000-18z" />
+        </svg>
+      </div>
+      <h2 class="text-lg font-semibold text-gray-800 mb-2">Registro cerrado</h2>
+      <p class="text-sm text-gray-500 mb-6">El registro de nuevos usuarios está temporalmente desactivado. Contacta al administrador.</p>
+      <a href="{% url 'login' %}"
+        class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition">
+        Ir al inicio de sesión
+      </a>
+    </div>
+    {% else %}
     <!-- Form -->
     <form method="post" class="space-y-5" novalidate>
       {% csrf_token %}
@@ -57,6 +74,7 @@
         Inicia sesión aquí
       </a>
     </p>
+    {% endif %}
 
   </div>
 </div>

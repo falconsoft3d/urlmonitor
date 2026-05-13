@@ -150,7 +150,7 @@
     <div class="mt-1">
       <button onclick="toggleConfigMenu()" data-tip="Configuración"
         class="sb-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
-               {% if request.resolver_match.url_name in 'config_schedule,config_telegram' %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:bg-indigo-800 hover:text-white{% endif %}">
+               {% if request.resolver_match.url_name in 'config_schedule,config_telegram,config_users' %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:bg-indigo-800 hover:text-white{% endif %}">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -162,7 +162,7 @@
         </svg>
       </button>
 
-      <div id="config-submenu" class="sb-label pl-8 mt-1 space-y-0.5 {% if request.resolver_match.url_name not in 'config_schedule,config_telegram' %}hidden{% endif %}">
+      <div id="config-submenu" class="sb-label pl-8 mt-1 space-y-0.5 {% if request.resolver_match.url_name not in 'config_schedule,config_telegram,config_users' %}hidden{% endif %}">
         <a href="{% url 'config_schedule' %}"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition
                  {% if request.resolver_match.url_name == 'config_schedule' %}text-white bg-indigo-700{% else %}text-indigo-300 hover:bg-indigo-800 hover:text-white{% endif %}">
@@ -179,6 +179,15 @@
             <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
           </svg>
           Telegram
+        </a>
+        <a href="{% url 'config_users' %}"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition
+                 {% if request.resolver_match.url_name == 'config_users' %}text-white bg-indigo-700{% else %}text-indigo-300 hover:bg-indigo-800 hover:text-white{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Usuarios
         </a>
       </div>
     </div>
