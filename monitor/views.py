@@ -39,7 +39,11 @@ def dashboard(request):
 @login_required
 def url_list(request):
     urls = MonitoredURL.objects.filter(user=request.user)
-    return render(request, 'monitor/url_list.html', {'urls': urls})
+    status_filter = request.GET.get('status')
+    valid_statuses = {MonitoredURL.STATUS_ACTIVE, MonitoredURL.STATUS_INACTIVE, MonitoredURL.STATUS_UNKNOWN}
+    if status_filter in valid_statuses:
+        urls = urls.filter(status=status_filter)
+    return render(request, 'monitor/url_list.html', {'urls': urls, 'status_filter': status_filter})
 
 
 @login_required
@@ -112,7 +116,7 @@ def _send_telegram_alert(monitored_url):
         pass
 
 
-def _do_check(monitored_url):
+def _do_check(monitored_url, force_notify=False):
     """Realiza la verificación HTTP de una URL, actualiza el objeto y guarda un CheckLog."""
     previous_status = monitored_url.status
     success, detail = False, 'Error'
@@ -151,8 +155,9 @@ def _do_check(monitored_url):
         success, detail = False, error_name
 
     # Notificar por Telegram solo en la primera caída (no spamear si sigue caída)
+    # Excepción: verificación manual (force_notify=True) siempre notifica si hay error
     if monitored_url.status == MonitoredURL.STATUS_INACTIVE:
-        if not monitored_url.telegram_alerted:
+        if force_notify or not monitored_url.telegram_alerted:
             _send_telegram_alert(monitored_url)
             monitored_url.telegram_alerted = True
     else:
@@ -165,7 +170,7 @@ def _do_check(monitored_url):
 @login_required
 def url_check(request, pk):
     monitored_url = get_object_or_404(MonitoredURL, pk=pk, user=request.user)
-    success, detail = _do_check(monitored_url)
+    success, detail = _do_check(monitored_url, force_notify=True)
     monitored_url.last_checked = timezone.now()
     monitored_url.save()
 
@@ -196,6 +201,24 @@ def url_check_all(request):
 
     messages.success(request, f'Se verificaron {checked} URL{"s" if checked != 1 else ""} exitosamente.')
     return redirect('dashboard')
+
+
+@login_required
+def url_check_ajax(request, pk):
+    """Verifica una URL y devuelve el resultado en JSON (para Verificar todas animado)."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    monitored_url = get_object_or_404(MonitoredURL, pk=pk, user=request.user)
+    success, detail = _do_check(monitored_url)
+    monitored_url.last_checked = timezone.now()
+    monitored_url.save()
+    return JsonResponse({
+        'ok': success,
+        'status': monitored_url.status,
+        'status_code': monitored_url.status_code,
+        'response_time': monitored_url.response_time,
+        'status_label': monitored_url.status_label,
+    })
 
 
 @login_required
@@ -277,6 +300,60 @@ def config_telegram(request):
     else:
         form = TelegramConfigForm(instance=config)
     return render(request, 'monitor/config_telegram.html', {'form': form, 'config': config})
+
+
+@login_required
+@user_passes_test(_staff_required)
+def telegram_test(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Método no permitido'}, status=405)
+    config = SiteConfig.get()
+    token = config.telegram_bot_token
+    chat_id = config.telegram_chat_id
+    if not token or not chat_id:
+        return JsonResponse({'ok': False, 'error': 'Configura el token y el chat ID primero.'})
+    try:
+        resp = http_requests.post(
+            f'https://api.telegram.org/bot{token}/sendMessage',
+            json={'chat_id': chat_id, 'text': '✅ URLMonitor: mensaje de prueba. ¡Telegram funciona correctamente!'},
+            timeout=10,
+        )
+        data = resp.json()
+        if data.get('ok'):
+            return JsonResponse({'ok': True})
+        return JsonResponse({'ok': False, 'error': data.get('description', 'Error desconocido')})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)})
+
+
+@login_required
+@user_passes_test(_staff_required)
+def telegram_get_updates(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Método no permitido'}, status=405)
+    config = SiteConfig.get()
+    token = config.telegram_bot_token
+    if not token:
+        return JsonResponse({'ok': False, 'error': 'Configura el token primero y guarda.'})
+    try:
+        resp = http_requests.get(
+            f'https://api.telegram.org/bot{token}/getUpdates',
+            timeout=10,
+        )
+        data = resp.json()
+        if not data.get('ok'):
+            return JsonResponse({'ok': False, 'error': data.get('description', 'Error desconocido')})
+        chats = {}
+        for update in data.get('result', []):
+            for key in ('message', 'channel_post', 'my_chat_member'):
+                chat = (update.get(key) or {}).get('chat')
+                if chat:
+                    chat_id = chat['id']
+                    title = chat.get('title') or chat.get('username') or chat.get('first_name') or str(chat_id)
+                    chats[chat_id] = {'id': chat_id, 'title': title, 'type': chat.get('type', '')}
+        return JsonResponse({'ok': True, 'chats': list(chats.values())})
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)})
 
 
 @login_required

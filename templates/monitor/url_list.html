@@ -8,14 +8,27 @@
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
   <div>
     <h1 class="text-2xl font-bold text-gray-900">Mis URLs</h1>
-    <p class="text-gray-500 text-sm mt-1">{{ urls|length }} URL{{ urls|length|pluralize:"s" }} registrada{{ urls|length|pluralize:"s" }}</p>
+    <p class="text-gray-500 text-sm mt-1">
+      {{ urls|length }} URL{{ urls|length|pluralize:"s" }} registrada{{ urls|length|pluralize:"s" }}
+      {% if status_filter %}
+        <a href="{% url 'url_list' %}" class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+          {% if status_filter == 'active' %}bg-green-100 text-green-700
+          {% elif status_filter == 'inactive' %}bg-red-100 text-red-700
+          {% else %}bg-gray-100 text-gray-600{% endif %}">
+          {% if status_filter == 'active' %}Activas{% elif status_filter == 'inactive' %}Inactivas{% else %}Sin verificar{% endif %}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </a>
+      {% endif %}
+    </p>
   </div>
   <div class="flex gap-3">
     <form method="post" action="{% url 'url_check_all' %}">
       {% csrf_token %}
-      <button type="submit"
+      <button type="button" id="btn-verify-all"
         class="inline-flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-xl font-medium text-sm transition shadow-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg id="btn-verify-all-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
@@ -51,11 +64,11 @@
       </thead>
       <tbody class="divide-y divide-gray-100">
         {% for u in urls %}
-        <tr class="hover:bg-gray-50 transition">
+        <tr class="hover:bg-indigo-50 transition cursor-pointer" data-pk="{{ u.pk }}" onclick="window.location='{% url 'url_detail' u.pk %}'">
 
           <!-- Status -->
           <td class="px-6 py-4">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold {{ u.status_badge_classes }}">
+            <span class="status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold {{ u.status_badge_classes }}">
               <span class="w-1.5 h-1.5 rounded-full {{ u.status_dot_classes }}"></span>
               {{ u.status_label }}
             </span>
@@ -67,28 +80,29 @@
           <!-- URL -->
           <td class="px-6 py-4 text-gray-500 hidden md:table-cell max-w-xs">
             <a href="{{ u.url }}" target="_blank" rel="noopener noreferrer"
-              class="hover:text-indigo-600 transition truncate block max-w-xs" title="{{ u.url }}">
+              class="hover:text-indigo-600 transition truncate block max-w-xs" title="{{ u.url }}"
+              onclick="event.stopPropagation()">
               {{ u.url }}
             </a>
           </td>
 
           <!-- HTTP code -->
           <td class="px-6 py-4 hidden lg:table-cell">
-            {% if u.status_code %}
-              <span class="font-mono font-semibold
-                {% if u.status_code < 300 %}text-green-600
-                {% elif u.status_code < 400 %}text-yellow-600
-                {% else %}text-red-600{% endif %}">
-                {{ u.status_code }}
-              </span>
-            {% else %}
-              <span class="text-gray-400">&mdash;</span>
-            {% endif %}
+            <span class="status-code font-mono font-semibold"
+              data-code="{% if u.status_code %}{{ u.status_code }}{% endif %}">
+              {% if u.status_code %}
+                <span class="{% if u.status_code < 300 %}text-green-600{% elif u.status_code < 400 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                  {{ u.status_code }}
+                </span>
+              {% else %}
+                <span class="text-gray-400">&mdash;</span>
+              {% endif %}
+            </span>
           </td>
 
           <!-- Response time -->
           <td class="px-6 py-4 text-gray-500 hidden lg:table-cell font-mono text-xs">
-            {% if u.response_time %}{{ u.response_time|floatformat:0 }} ms{% else %}&mdash;{% endif %}
+            <span class="response-time">{% if u.response_time %}{{ u.response_time|floatformat:0 }} ms{% else %}&mdash;{% endif %}</span>
           </td>
 
           <!-- Last checked -->
@@ -101,7 +115,7 @@
           </td>
 
           <!-- Actions -->
-          <td class="px-6 py-4 text-right">
+          <td class="px-6 py-4 text-right" onclick="event.stopPropagation()">
             <div class="flex items-center justify-end gap-2">
               <a href="{% url 'url_check' u.pk %}?next=url_list"
                 class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 transition"
@@ -111,17 +125,6 @@
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Verificar
-              </a>
-              <a href="{% url 'url_detail' u.pk %}"
-                class="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition"
-                title="Ver detalle y logs">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                Ver
               </a>
               <a href="{% url 'url_edit' u.pk %}"
                 class="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition"
@@ -167,4 +170,77 @@
 
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
+
+document.getElementById('btn-verify-all').addEventListener('click', async function () {
+  const btn = this;
+  const icon = document.getElementById('btn-verify-all-icon');
+  const rows = document.querySelectorAll('tr[data-pk]');
+  if (!rows.length) return;
+
+  btn.disabled = true;
+  icon.classList.add('animate-spin');
+
+  for (const row of rows) {
+    const pk = row.dataset.pk;
+
+    // Fila en curso: amarillo
+    row.style.transition = 'background-color 0.3s';
+    row.style.backgroundColor = '#fef9c3';
+
+    try {
+      const resp = await fetch(`/urls/${pk}/verificar-ajax/`, {
+        method: 'POST',
+        headers: {'X-CSRFToken': CSRF},
+      });
+      const data = await resp.json();
+
+      // Actualizar badge de estado
+      const badge = row.querySelector('.status-badge');
+      if (badge) {
+        const isActive = data.status === 'active';
+        badge.className = `status-badge inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+          isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`;
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${isActive ? 'bg-green-500' : 'bg-red-500'}"></span>${data.status_label}`;
+      }
+
+      // Actualizar código HTTP
+      const codeCell = row.querySelector('.status-code');
+      if (codeCell) {
+        if (data.status_code) {
+          const c = data.status_code;
+          const color = c < 300 ? 'text-green-600' : c < 400 ? 'text-yellow-600' : 'text-red-600';
+          codeCell.innerHTML = `<span class="font-mono font-semibold ${color}">${c}</span>`;
+        } else {
+          codeCell.innerHTML = '<span class="text-gray-400">&mdash;</span>';
+        }
+      }
+
+      // Actualizar tiempo de respuesta
+      const rtCell = row.querySelector('.response-time');
+      if (rtCell) {
+        rtCell.textContent = data.response_time ? `${Math.round(data.response_time)} ms` : '—';
+      }
+
+      // Flash: verde si OK, rojo si error, luego vuelve a normal
+      row.style.backgroundColor = data.ok ? '#dcfce7' : '#fee2e2';
+      await new Promise(r => setTimeout(r, 700));
+      row.style.backgroundColor = '';
+
+    } catch {
+      row.style.backgroundColor = '#fee2e2';
+      await new Promise(r => setTimeout(r, 700));
+      row.style.backgroundColor = '';
+    }
+  }
+
+  btn.disabled = false;
+  icon.classList.remove('animate-spin');
+});
+</script>
 {% endblock %}

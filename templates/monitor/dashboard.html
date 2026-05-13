@@ -22,7 +22,7 @@
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
 
   <!-- Total -->
-  <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white shadow-md">
+  <a href="{% url 'url_list' %}" class="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-transform block">
     <p class="text-indigo-200 text-xs font-semibold uppercase tracking-wide mb-1">Total URLs</p>
     <p class="text-4xl font-extrabold">{{ total }}</p>
     <div class="mt-3 opacity-70">
@@ -31,10 +31,10 @@
           d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
       </svg>
     </div>
-  </div>
+  </a>
 
   <!-- Activas -->
-  <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-md">
+  <a href="{% url 'url_list' %}?status=active" class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-transform block">
     <p class="text-green-100 text-xs font-semibold uppercase tracking-wide mb-1">Activas</p>
     <p class="text-4xl font-extrabold">{{ active }}</p>
     <div class="mt-3 opacity-70">
@@ -42,10 +42,10 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     </div>
-  </div>
+  </a>
 
   <!-- Inactivas -->
-  <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-md">
+  <a href="{% url 'url_list' %}?status=inactive" class="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-transform block">
     <p class="text-red-100 text-xs font-semibold uppercase tracking-wide mb-1">Inactivas</p>
     <p class="text-4xl font-extrabold">{{ inactive }}</p>
     <div class="mt-3 opacity-70">
@@ -53,10 +53,10 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     </div>
-  </div>
+  </a>
 
   <!-- Sin verificar -->
-  <div class="bg-gradient-to-br from-gray-400 to-gray-500 rounded-2xl p-6 text-white shadow-md">
+  <a href="{% url 'url_list' %}?status=unknown" class="bg-gradient-to-br from-gray-400 to-gray-500 rounded-2xl p-6 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-transform block">
     <p class="text-gray-100 text-xs font-semibold uppercase tracking-wide mb-1">Sin verificar</p>
     <p class="text-4xl font-extrabold">{{ unknown }}</p>
     <div class="mt-3 opacity-70">
@@ -65,7 +65,7 @@
           d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     </div>
-  </div>
+  </a>
 
 </div>
 
@@ -88,12 +88,11 @@
           <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">URL</th>
           <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Código</th>
           <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Respuesta</th>
-          <th class="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Acción</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100">
         {% for u in recent_urls %}
-        <tr class="hover:bg-gray-50 transition">
+        <tr class="hover:bg-indigo-50 transition cursor-pointer" onclick="window.location='{% url 'url_detail' u.pk %}'">
           <td class="px-6 py-4">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold {{ u.status_badge_classes }}">
               <span class="w-1.5 h-1.5 rounded-full {{ u.status_dot_classes }}"></span>
@@ -103,19 +102,13 @@
           <td class="px-6 py-4 font-medium text-gray-900">{{ u.name }}</td>
           <td class="px-6 py-4 text-gray-500 hidden md:table-cell max-w-xs truncate">
             <a href="{{ u.url }}" target="_blank" rel="noopener noreferrer"
-              class="hover:text-indigo-600 transition">{{ u.url }}</a>
+              class="hover:text-indigo-600 transition" onclick="event.stopPropagation()">{{ u.url }}</a>
           </td>
           <td class="px-6 py-4 text-gray-500 hidden lg:table-cell">
             {% if u.status_code %}{{ u.status_code }}{% else %}&mdash;{% endif %}
           </td>
           <td class="px-6 py-4 text-gray-500 hidden lg:table-cell">
             {% if u.response_time %}{{ u.response_time|floatformat:0 }} ms{% else %}&mdash;{% endif %}
-          </td>
-          <td class="px-6 py-4 text-right">
-            <a href="{% url 'url_check' u.pk %}?next=dashboard"
-              class="text-indigo-600 hover:text-indigo-700 font-medium">
-              Verificar
-            </a>
           </td>
         </tr>
         {% endfor %}
