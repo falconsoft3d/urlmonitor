@@ -469,3 +469,217 @@ def url_public(request, token):
         'last_failures': last_failures,
         'recent_logs': recent_logs,
     })
+
+
+# ---------------------------------------------------------------------------
+# Análisis técnico de una URL
+# ---------------------------------------------------------------------------
+
+def _detect_technologies(headers, html_content):
+    """Detecta tecnologías a partir de cabeceras HTTP y contenido HTML."""
+    techs = []
+
+    server = headers.get('Server', '')
+    powered_by = headers.get('X-Powered-By', '')
+
+    if server:
+        techs.append({'name': server, 'category': 'Servidor'})
+    if powered_by:
+        techs.append({'name': powered_by, 'category': 'Backend'})
+
+    patterns = [
+        ('WordPress',   'CMS',       ['/wp-content/', '/wp-includes/', 'wp-json']),
+        ('Joomla',      'CMS',       ['/components/com_', 'Joomla!']),
+        ('Drupal',      'CMS',       ['Drupal.settings', '/sites/default/files/']),
+        ('Shopify',     'E-commerce',['cdn.shopify.com', 'Shopify.theme']),
+        ('Wix',         'Website builder', ['static.wixstatic.com', 'wix.com']),
+        ('Squarespace', 'Website builder', ['squarespace.com', 'static1.squarespace']),
+        ('React',       'JavaScript',['react.js', 'react.min.js', 'react-dom', '__REACT']),
+        ('Vue.js',      'JavaScript',['vue.js', 'vue.min.js', 'Vue.config']),
+        ('Angular',     'JavaScript',['angular.js', 'ng-version', 'ng-app']),
+        ('Next.js',     'JavaScript',['_next/static', '__NEXT_DATA__']),
+        ('Nuxt.js',     'JavaScript',['_nuxt/', '__NUXT__']),
+        ('jQuery',      'JavaScript',['jquery.min.js', 'jquery.js']),
+        ('Bootstrap',   'CSS',       ['bootstrap.min.css', 'bootstrap.css', 'bootstrap.min.js']),
+        ('Tailwind CSS','CSS',       ['tailwind', 'cdn.tailwindcss.com']),
+        ('Laravel',     'Backend',   ['laravel_session', 'Laravel']),
+        ('Django',      'Backend',   ['csrfmiddlewaretoken', 'django']),
+        ('Ruby on Rails','Backend',  ['rails', '__rails_assets']),
+        ('ASP.NET',     'Backend',   ['__VIEWSTATE', 'asp.net', 'aspnet']),
+        ('PHP',         'Backend',   ['.php', 'PHPSESSID']),
+        ('Google Analytics','Analytics',['google-analytics.com', 'gtag(', 'ga(']),
+        ('Google Tag Manager','Analytics',['googletagmanager.com']),
+        ('Cloudflare',  'CDN / Seguridad', ['cloudflare', '__cfuid', '__cf_bm']),
+        ('Nginx',       'Servidor',  ['nginx']),
+        ('Apache',      'Servidor',  ['Apache']),
+        ('Vercel',      'Hosting',   ['vercel', 'x-vercel']),
+        ('Netlify',     'Hosting',   ['netlify']),
+    ]
+
+    found_names = {t['name'] for t in techs}
+    combined = html_content + ' '.join(f'{k}: {v}' for k, v in headers.items())
+
+    for name, category, signals in patterns:
+        if name in found_names:
+            continue
+        if any(sig.lower() in combined.lower() for sig in signals):
+            techs.append({'name': name, 'category': category})
+            found_names.add(name)
+
+    return techs
+
+
+def _get_resource_size(url, session, timeout=3):
+    """Intenta obtener el tamaño de un recurso via HEAD (fallback: 0)."""
+    try:
+        r = session.head(url, timeout=timeout, allow_redirects=True)
+        cl = r.headers.get('Content-Length')
+        if cl and cl.isdigit():
+            return int(cl)
+    except Exception:
+        pass
+    return 0
+
+
+@login_required
+def url_analyze(request, pk):
+    """Analiza técnicamente una URL: tecnologías, recursos, tiempos, cabeceras de seguridad."""
+    from html.parser import HTMLParser
+    from urllib.parse import urljoin, urlparse
+    import time
+
+    monitored_url = _get_url_or_404(pk, request)
+    error = None
+    context = {'monitored_url': monitored_url, 'error': None}
+
+    try:
+        session = http_requests.Session()
+        session.headers.update({'User-Agent': 'URLMonitor-Analyzer/1.0'})
+
+        t0 = time.time()
+        response = session.get(monitored_url.url, timeout=15, allow_redirects=True)
+        load_time_ms = round((time.time() - t0) * 1000, 1)
+
+        html_content = response.text
+        resp_headers = dict(response.headers)
+        status_code = response.status_code
+        final_url = response.url
+        content_length = len(response.content)
+        content_type = resp_headers.get('Content-Type', '')
+        redirects = len(response.history)
+
+        # --- Tecnologías ---
+        technologies = _detect_technologies(resp_headers, html_content)
+
+        # --- Parsear recursos del HTML ---
+        class ResourceParser(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.resources = []
+
+            def handle_starttag(self, tag, attrs):
+                attrs_dict = dict(attrs)
+                if tag == 'script' and attrs_dict.get('src'):
+                    self.resources.append(('JS', attrs_dict['src']))
+                elif tag == 'link' and attrs_dict.get('rel') in (['stylesheet'], 'stylesheet'):
+                    href = attrs_dict.get('href', '')
+                    if href:
+                        self.resources.append(('CSS', href))
+                elif tag == 'link' and 'stylesheet' in attrs_dict.get('rel', ''):
+                    href = attrs_dict.get('href', '')
+                    if href:
+                        self.resources.append(('CSS', href))
+                elif tag == 'img' and attrs_dict.get('src'):
+                    src = attrs_dict['src']
+                    if not src.startswith('data:'):
+                        self.resources.append(('IMG', src))
+
+        parser = ResourceParser()
+        parser.feed(html_content)
+
+        base = final_url
+        resources_with_size = []
+        seen = set()
+        for rtype, rurl in parser.resources[:40]:  # límite 40 para no tardar demasiado
+            abs_url = urljoin(base, rurl)
+            if abs_url in seen:
+                continue
+            seen.add(abs_url)
+            size = _get_resource_size(abs_url, session)
+            resources_with_size.append({
+                'type': rtype,
+                'url': abs_url,
+                'display_url': abs_url if len(abs_url) < 80 else abs_url[:77] + '…',
+                'size': size,
+                'size_kb': round(size / 1024, 1) if size else 0,
+            })
+
+        resources_sorted = sorted(resources_with_size, key=lambda r: r['size'], reverse=True)
+
+        total_resources_size = sum(r['size'] for r in resources_sorted)
+        js_count = sum(1 for r in resources_sorted if r['type'] == 'JS')
+        css_count = sum(1 for r in resources_sorted if r['type'] == 'CSS')
+        img_count = sum(1 for r in resources_sorted if r['type'] == 'IMG')
+
+        # --- Cabeceras de seguridad ---
+        security_headers = [
+            ('Strict-Transport-Security', 'HSTS', 'Fuerza HTTPS en el navegador.'),
+            ('Content-Security-Policy', 'CSP', 'Previene XSS y otros ataques de inyección.'),
+            ('X-Frame-Options', 'Clickjacking', 'Evita que la página sea embebida en iframes.'),
+            ('X-Content-Type-Options', 'MIME Sniffing', 'Evita que el navegador adivine el tipo de contenido.'),
+            ('Referrer-Policy', 'Referrer', 'Controla la información enviada en el encabezado Referer.'),
+            ('Permissions-Policy', 'Permisos', 'Restringe el acceso a APIs del navegador.'),
+        ]
+        security_results = []
+        for header, label, description in security_headers:
+            present = header.lower() in {k.lower() for k in resp_headers}
+            security_results.append({
+                'header': header,
+                'label': label,
+                'description': description,
+                'present': present,
+                'value': resp_headers.get(header, ''),
+            })
+
+        security_score = sum(1 for s in security_results if s['present'])
+
+        # --- Cabeceras generales relevantes ---
+        interesting_headers = [
+            'Server', 'X-Powered-By', 'Content-Type', 'Cache-Control',
+            'Expires', 'Last-Modified', 'ETag', 'Via', 'X-Cache',
+            'CF-Ray', 'X-Varnish', 'Access-Control-Allow-Origin',
+        ]
+        displayed_headers = [
+            {'name': h, 'value': resp_headers[h]}
+            for h in interesting_headers if h in resp_headers
+        ]
+
+        context.update({
+            'load_time_ms': load_time_ms,
+            'status_code': status_code,
+            'final_url': final_url,
+            'content_length_kb': round(content_length / 1024, 1),
+            'content_type': content_type,
+            'redirects': redirects,
+            'technologies': technologies,
+            'resources': resources_sorted,
+            'total_resources': len(resources_sorted),
+            'total_resources_size_kb': round(total_resources_size / 1024, 1),
+            'js_count': js_count,
+            'css_count': css_count,
+            'img_count': img_count,
+            'security_results': security_results,
+            'security_score': security_score,
+            'security_total': len(security_results),
+            'displayed_headers': displayed_headers,
+        })
+
+    except http_requests.exceptions.Timeout:
+        context['error'] = 'La solicitud tardó demasiado (timeout).'
+    except http_requests.exceptions.ConnectionError:
+        context['error'] = 'No se pudo conectar a la URL.'
+    except Exception as exc:
+        context['error'] = f'Error inesperado: {exc}'
+
+    return render(request, 'monitor/url_analyze.html', context)
+

@@ -11,6 +11,7 @@ urlpatterns = [
     path('urls/verificar-todas/', views.url_check_all, name='url_check_all'),
     path('urls/<int:pk>/verificar-ajax/', views.url_check_ajax, name='url_check_ajax'),
     path('urls/<int:pk>/detalle/', views.url_detail, name='url_detail'),
+    path('urls/<int:pk>/analizar/', views.url_analyze, name='url_analyze'),
     path('logs/', views.log_list, name='log_list'),
     path('config/verificacion/', views.config_schedule, name='config_schedule'),
     path('config/telegram/', views.config_telegram, name='config_telegram'),
