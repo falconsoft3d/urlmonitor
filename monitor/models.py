@@ -62,6 +62,14 @@ class MonitoredURL(models.Model):
             return 'bg-red-500'
         return 'bg-gray-400'
 
+    @property
+    def status_label(self):
+        if self.status == self.STATUS_ACTIVE:
+            return 'Activo'
+        if self.status == self.STATUS_INACTIVE:
+            return 'Inactivo'
+        return 'Sin verificar'
+
 
 class CheckLog(models.Model):
     monitored_url = models.ForeignKey(
