@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .forms import RegisterForm, ProfileDataForm, AvatarForm, StyledPasswordChangeForm
+from .forms import RegisterForm, ProfileDataForm, AvatarForm, StyledPasswordChangeForm, UserEditForm
 from .models import UserProfile
 
 
@@ -120,6 +120,30 @@ def user_form_view(request, role):
         'form': form,
         'role': role,
         'role_label': role_label,
+    })
+
+
+@login_required
+@user_passes_test(staff_required)
+def user_edit_view(request, pk):
+    edited_user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        form = UserEditForm(request.POST, instance=edited_user)
+        if form.is_valid():
+            user = form.save(commit=False)
+            new_password = form.cleaned_data.get('new_password')
+            if new_password:
+                user.set_password(new_password)
+            user.save()
+            messages.success(request, f'Usuario «{user.username}» actualizado exitosamente.')
+            return redirect('user_list')
+    else:
+        form = UserEditForm(instance=edited_user)
+
+    return render(request, 'accounts/user_edit.html', {
+        'form': form,
+        'edited_user': edited_user,
     })
 
 

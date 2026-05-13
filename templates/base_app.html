@@ -89,14 +89,14 @@
       <span class="sb-label">Dashboard</span>
     </a>
 
-    <a href="{% url 'url_list' %}" data-tip="Mis URLs"
+    <a href="{% url 'url_list' %}" data-tip="URLs"
       class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
              {% if request.resolver_match.url_name == 'url_list' %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:bg-indigo-800 hover:text-white{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M4 6h16M4 10h16M4 14h16M4 18h16" />
       </svg>
-      <span class="sb-label">Mis URLs</span>
+      <span class="sb-label">URLs</span>
     </a>
 
     <a href="{% url 'log_list' %}" data-tip="Logs"

@@ -7,10 +7,24 @@ from django.http import JsonResponse
 
 from django.core.paginator import Paginator
 from .models import MonitoredURL, CheckLog, SiteConfig
-from .forms import MonitoredURLForm, ScheduleConfigForm, TelegramConfigForm, RegistrationConfigForm
+from .forms import MonitoredURLForm, MonitoredURLAdminForm, ScheduleConfigForm, TelegramConfigForm, RegistrationConfigForm
 
 # URLs destino seguras para el parámetro "next"
 SAFE_NEXT_URLS = {'url_list', 'dashboard'}
+
+
+def _url_qs(request):
+    """Devuelve todas las URLs si el usuario es staff, solo las asignadas al usuario si no lo es."""
+    if request.user.is_staff:
+        return MonitoredURL.objects.all()
+    return MonitoredURL.objects.filter(users=request.user)
+
+
+def _get_url_or_404(pk, request):
+    """Recupera una MonitoredURL; staff puede acceder a cualquiera, el resto solo a las suyas."""
+    if request.user.is_staff:
+        return get_object_or_404(MonitoredURL, pk=pk)
+    return get_object_or_404(MonitoredURL, pk=pk, users=request.user)
 
 
 def home(request):
@@ -19,7 +33,7 @@ def home(request):
 
 @login_required
 def dashboard(request):
-    urls = MonitoredURL.objects.filter(user=request.user)
+    urls = _url_qs(request)
     total = urls.count()
     active = urls.filter(status=MonitoredURL.STATUS_ACTIVE).count()
     inactive = urls.filter(status=MonitoredURL.STATUS_INACTIVE).count()
@@ -38,7 +52,7 @@ def dashboard(request):
 
 @login_required
 def url_list(request):
-    urls = MonitoredURL.objects.filter(user=request.user)
+    urls = _url_qs(request)
     status_filter = request.GET.get('status')
     valid_statuses = {MonitoredURL.STATUS_ACTIVE, MonitoredURL.STATUS_INACTIVE, MonitoredURL.STATUS_UNKNOWN}
     if status_filter in valid_statuses:
@@ -48,32 +62,39 @@ def url_list(request):
 
 @login_required
 def url_add(request):
+    FormClass = MonitoredURLAdminForm if request.user.is_staff else MonitoredURLForm
     if request.method == 'POST':
-        form = MonitoredURLForm(request.POST)
+        form = FormClass(request.POST)
         if form.is_valid():
             monitored_url = form.save(commit=False)
-            monitored_url.user = request.user
             monitored_url.save()
+            if not request.user.is_staff:
+                # usuario normal: se asigna a sí mismo
+                monitored_url.users.add(request.user)
+            else:
+                # admin: guarda la M2M seleccionada en el form
+                form.save_m2m()
             messages.success(request, f'URL "{monitored_url.name}" agregada exitosamente.')
             return redirect('url_list')
     else:
-        form = MonitoredURLForm()
+        form = FormClass()
 
     return render(request, 'monitor/url_form.html', {'form': form, 'action': 'Agregar'})
 
 
 @login_required
 def url_edit(request, pk):
-    monitored_url = get_object_or_404(MonitoredURL, pk=pk, user=request.user)
+    monitored_url = _get_url_or_404(pk, request)
+    FormClass = MonitoredURLAdminForm if request.user.is_staff else MonitoredURLForm
 
     if request.method == 'POST':
-        form = MonitoredURLForm(request.POST, instance=monitored_url)
+        form = FormClass(request.POST, instance=monitored_url)
         if form.is_valid():
             form.save()
             messages.success(request, f'URL "{monitored_url.name}" actualizada exitosamente.')
             return redirect('url_list')
     else:
-        form = MonitoredURLForm(instance=monitored_url)
+        form = FormClass(instance=monitored_url)
 
     return render(request, 'monitor/url_form.html', {
         'form': form,
@@ -84,7 +105,7 @@ def url_edit(request, pk):
 
 @login_required
 def url_delete(request, pk):
-    monitored_url = get_object_or_404(MonitoredURL, pk=pk, user=request.user)
+    monitored_url = _get_url_or_404(pk, request)
 
     if request.method == 'POST':
         name = monitored_url.name
@@ -169,7 +190,7 @@ def _do_check(monitored_url, force_notify=False):
 
 @login_required
 def url_check(request, pk):
-    monitored_url = get_object_or_404(MonitoredURL, pk=pk, user=request.user)
+    monitored_url = _get_url_or_404(pk, request)
     success, detail = _do_check(monitored_url, force_notify=True)
     monitored_url.last_checked = timezone.now()
     monitored_url.save()
@@ -190,7 +211,7 @@ def url_check(request, pk):
 
 @login_required
 def url_check_all(request):
-    urls = MonitoredURL.objects.filter(user=request.user)
+    urls = _url_qs(request)
     checked = 0
 
     for monitored_url in urls:
@@ -208,7 +229,7 @@ def url_check_ajax(request, pk):
     """Verifica una URL y devuelve el resultado en JSON (para Verificar todas animado)."""
     if request.method != 'POST':
         return JsonResponse({'ok': False}, status=405)
-    monitored_url = get_object_or_404(MonitoredURL, pk=pk, user=request.user)
+    monitored_url = _get_url_or_404(pk, request)
     success, detail = _do_check(monitored_url)
     monitored_url.last_checked = timezone.now()
     monitored_url.save()
@@ -223,7 +244,10 @@ def url_check_ajax(request, pk):
 
 @login_required
 def log_list(request):
-    qs = CheckLog.objects.filter(monitored_url__user=request.user).select_related('monitored_url')
+    if request.user.is_staff:
+        qs = CheckLog.objects.all().select_related('monitored_url')
+    else:
+        qs = CheckLog.objects.filter(monitored_url__users=request.user).select_related('monitored_url')
     paginator = Paginator(qs, 40)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -240,7 +264,7 @@ def _staff_required(user):
 @login_required
 def url_detail(request, pk):
     from django.db.models import Avg, Count, Q
-    monitored_url = get_object_or_404(MonitoredURL, pk=pk, user=request.user)
+    monitored_url = _get_url_or_404(pk, request)
     all_logs = monitored_url.logs.all()
     logs = all_logs[:50]
 

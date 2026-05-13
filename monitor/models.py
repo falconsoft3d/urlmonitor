@@ -14,7 +14,7 @@ class MonitoredURL(models.Model):
         (STATUS_INACTIVE, 'Inactivo'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='monitored_urls')
+    users = models.ManyToManyField(User, related_name='shared_urls', verbose_name='Usuarios', blank=True)
     name = models.CharField(max_length=200, verbose_name='Nombre')
     url = models.URLField(max_length=500, verbose_name='URL')
     status = models.CharField(

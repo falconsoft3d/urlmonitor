@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.models import User
 from .models import MonitoredURL, SiteConfig
 
 INPUT_CLASSES = (
@@ -31,6 +32,37 @@ class MonitoredURLForm(forms.ModelForm):
                 'placeholder': 'https://ejemplo.com',
             }),
         }
+
+
+class MonitoredURLAdminForm(forms.ModelForm):
+    """Igual que MonitoredURLForm pero incluye selector múltiple de usuarios (solo para staff)."""
+    class Meta:
+        model = MonitoredURL
+        fields = ['users', 'name', 'url']
+        labels = {
+            'users': 'Usuarios propietarios',
+            'name': 'Nombre',
+            'url': 'URL',
+        }
+        widgets = {
+            'users': forms.SelectMultiple(attrs={
+                'class': SELECT_CLASSES,
+                'id': 'id_users',
+            }),
+            'name': forms.TextInput(attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'Ej: Mi sitio web',
+            }),
+            'url': forms.URLInput(attrs={
+                'class': INPUT_CLASSES,
+                'placeholder': 'https://ejemplo.com',
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['users'].queryset = User.objects.filter(is_active=True).order_by('username')
+        self.fields['users'].required = False
 
 
 class ScheduleConfigForm(forms.ModelForm):

@@ -78,6 +78,42 @@ class AvatarForm(forms.ModelForm):
         }
 
 
+class UserEditForm(forms.ModelForm):
+    new_password = forms.CharField(
+        required=False,
+        label='Nueva contraseña',
+        help_text='Deja en blanco para no cambiarla.',
+        widget=forms.PasswordInput(attrs={
+            'class': INPUT_CLASSES,
+            'placeholder': 'Dejar en blanco para no cambiar',
+            'autocomplete': 'new-password',
+        }),
+    )
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'is_active', 'is_staff', 'is_superuser')
+        labels = {
+            'username': 'Nombre de usuario',
+            'email': 'Correo electrónico',
+            'is_active': 'Cuenta activa',
+            'is_staff': 'Staff (acceso al panel de admin)',
+            'is_superuser': 'Superusuario (todos los permisos)',
+        }
+        widgets = {
+            'username': forms.TextInput(attrs={'class': INPUT_CLASSES}),
+            'email': forms.EmailInput(attrs={'class': INPUT_CLASSES, 'placeholder': 'tu@correo.com'}),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500',
+            }),
+            'is_staff': forms.CheckboxInput(attrs={
+                'class': 'w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500',
+            }),
+            'is_superuser': forms.CheckboxInput(attrs={
+                'class': 'w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500',
+            }),
+        }
+
 class StyledPasswordChangeForm(DjangoPasswordChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

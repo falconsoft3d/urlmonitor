@@ -1,13 +1,13 @@
 {% extends 'base_app.html' %}
-{% block title %}Mis URLs — URLMonitor{% endblock %}
-{% block page_title %}Mis URLs{% endblock %}
+{% block title %}{% if request.user.is_staff %}Todas las URLs{% else %}URLs{% endif %} — URLMonitor{% endblock %}
+{% block page_title %}{% if request.user.is_staff %}Todas las URLs{% else %}URLs{% endif %}{% endblock %}
 
 {% block content %}
 
 <!-- Header -->
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Mis URLs</h1>
+    <h1 class="text-2xl font-bold text-gray-900">{% if request.user.is_staff %}Todas las URLs{% else %}URLs{% endif %}</h1>
     <p class="text-gray-500 text-sm mt-1">
       {{ urls|length }} URL{{ urls|length|pluralize:"s" }} registrada{{ urls|length|pluralize:"s" }}
       {% if status_filter %}
@@ -55,6 +55,7 @@
         <tr>
           <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
           <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Usuario</th>
           <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">URL</th>
           <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Código</th>
           <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Respuesta</th>
@@ -76,6 +77,19 @@
 
           <!-- Name -->
           <td class="px-6 py-4 font-medium text-gray-900 max-w-[140px] truncate">{{ u.name }}</td>
+
+          <!-- Usuarios -->
+          <td class="px-6 py-4 hidden sm:table-cell">
+            <div class="flex flex-wrap gap-1">
+              {% for usr in u.users.all %}
+              <span class="inline-flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">
+                {{ usr.username }}
+              </span>
+              {% empty %}
+              <span class="text-gray-400 text-xs">—</span>
+              {% endfor %}
+            </div>
+          </td>
 
           <!-- URL -->
           <td class="px-6 py-4 text-gray-500 hidden md:table-cell max-w-xs">

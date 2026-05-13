@@ -7,7 +7,7 @@
 
   <!-- Breadcrumb -->
   <nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
-    <a href="{% url 'url_list' %}" class="hover:text-indigo-600 transition font-medium">Mis URLs</a>
+    <a href="{% url 'url_list' %}" class="hover:text-indigo-600 transition font-medium">URLs</a>
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
     </svg>
@@ -79,4 +79,47 @@
   </div>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if request.user.is_staff %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<style>
+  .ts-wrapper .ts-control {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    min-height: 44px;
+    box-shadow: none;
+  }
+  .ts-wrapper.focus .ts-control { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,.2); }
+  .ts-wrapper .ts-control .item {
+    background: #e0e7ff;
+    color: #4338ca;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: none;
+  }
+  .ts-wrapper .ts-control .item .remove {
+    color: #6366f1;
+    margin-left: 4px;
+  }
+  .ts-dropdown { border-radius: 0.5rem; border-color: #e5e7eb; }
+  .ts-dropdown .option.active { background: #e0e7ff; color: #3730a3; }
+  .ts-dropdown .option:hover { background: #f5f3ff; }
+</style>
+<script>
+  new TomSelect('#id_users', {
+    plugins: ['remove_button'],
+    create: false,
+    maxItems: null,
+    placeholder: 'Selecciona uno o más usuarios...',
+    onItemAdd: function() { this.setTextboxValue(''); this.refreshOptions(); },
+  });
+</script>
+{% endif %}
 {% endblock %}

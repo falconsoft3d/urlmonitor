@@ -1,0 +1,111 @@
+{% extends 'base_app.html' %}
+{% block title %}Editar usuario — URLMonitor{% endblock %}
+{% block page_title %}Editar usuario{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+    <a href="{% url 'user_list' %}" class="hover:text-indigo-600 transition font-medium">Usuarios</a>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <span class="text-gray-600 font-medium">Editar {{ edited_user.username }}</span>
+  </nav>
+
+  <!-- Encabezado -->
+  <div class="mb-8 flex items-center gap-4">
+    <div class="flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg shrink-0
+      {% if edited_user.is_superuser %}bg-indigo-100 text-indigo-700
+      {% elif edited_user.is_staff %}bg-purple-100 text-purple-700
+      {% else %}bg-gray-100 text-gray-600{% endif %}">
+      {{ edited_user.username|first|upper }}
+    </div>
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">{{ edited_user.username }}</h1>
+      <p class="text-gray-500 text-sm mt-0.5">Edita los datos de este usuario.</p>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="space-y-5">
+
+        <!-- Username -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.username.label }}</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+          <p class="mt-1 text-xs text-red-600">{{ form.username.errors|join:', ' }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email.label }}</label>
+          {{ form.email }}
+          {% if form.email.errors %}
+          <p class="mt-1 text-xs text-red-600">{{ form.email.errors|join:', ' }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Activo -->
+        <div class="flex items-center gap-3 py-1">
+          {{ form.is_active }}
+          <label class="text-sm font-medium text-gray-700 cursor-pointer" for="{{ form.is_active.id_for_label }}">
+            {{ form.is_active.label }}
+          </label>
+        </div>
+
+        <!-- Staff -->
+        <div class="flex items-center gap-3 py-1">
+          {{ form.is_staff }}
+          <label class="text-sm font-medium text-gray-700 cursor-pointer" for="{{ form.is_staff.id_for_label }}">
+            {{ form.is_staff.label }}
+          </label>
+        </div>
+
+        <!-- Superusuario -->
+        <div class="flex items-center gap-3 py-1">
+          {{ form.is_superuser }}
+          <label class="text-sm font-medium text-gray-700 cursor-pointer" for="{{ form.is_superuser.id_for_label }}">
+            {{ form.is_superuser.label }}
+          </label>
+        </div>
+
+        <!-- Nueva contraseña -->
+        <div class="pt-2 border-t border-gray-100">
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.new_password.label }}</label>
+          {{ form.new_password }}
+          <p class="mt-1 text-xs text-gray-400">{{ form.new_password.help_text }}</p>
+          {% if form.new_password.errors %}
+          <p class="mt-1 text-xs text-red-600">{{ form.new_password.errors|join:', ' }}</p>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- Acciones -->
+      <div class="mt-8 flex items-center justify-between gap-3">
+        <a href="{% url 'user_list' %}"
+          class="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-gray-100 transition">
+          Cancelar
+        </a>
+        <button type="submit"
+          class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-medium text-sm transition shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Guardar cambios
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}
