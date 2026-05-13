@@ -81,6 +81,22 @@
     </div>
     {% endif %}
 
+    <!-- Tiempo activo sin caídas -->
+    {% if uptime_label %}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Activo sin caídas</p>
+        <p class="text-2xl font-extrabold text-green-600">{{ uptime_label }}</p>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Last failures -->
     {% if last_failures %}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

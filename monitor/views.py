@@ -290,6 +290,35 @@ def url_detail(request, pk):
         status=MonitoredURL.STATUS_INACTIVE
     ).order_by('-checked_at')[:5]
 
+    # Tiempo activo sin caídas (desde la última caída o desde el primer check)
+    uptime_since = None
+    uptime_label = None
+    last_failure = all_logs.filter(status=MonitoredURL.STATUS_INACTIVE).order_by('-checked_at').first()
+    first_ok = all_logs.filter(status=MonitoredURL.STATUS_ACTIVE).order_by('checked_at').first()
+    reference = None
+    if last_failure:
+        # Busca el primer check exitoso DESPUÉS de la última caída
+        ok_after = all_logs.filter(
+            status=MonitoredURL.STATUS_ACTIVE,
+            checked_at__gt=last_failure.checked_at
+        ).order_by('checked_at').first()
+        reference = ok_after.checked_at if ok_after else None
+    elif first_ok:
+        reference = first_ok.checked_at
+
+    if reference:
+        delta = timezone.now() - reference
+        total_seconds = int(delta.total_seconds())
+        days = delta.days
+        hours = (total_seconds % 86400) // 3600
+        minutes = (total_seconds % 3600) // 60
+        if days >= 1:
+            uptime_label = f'{days} día{"s" if days != 1 else ""} y {hours} hora{"s" if hours != 1 else ""}'
+        elif hours >= 1:
+            uptime_label = f'{hours} hora{"s" if hours != 1 else ""} y {minutes} minuto{"s" if minutes != 1 else ""}'
+        else:
+            uptime_label = f'{minutes} minuto{"s" if minutes != 1 else ""}'
+
     form = MonitoredURLForm(instance=monitored_url)
     return render(request, 'monitor/url_detail.html', {
         'monitored_url': monitored_url,
@@ -301,6 +330,7 @@ def url_detail(request, pk):
         'uptime_pct': uptime_pct,
         'avg_response': avg_response,
         'last_failures': last_failures,
+        'uptime_label': uptime_label,
     })
 
 
@@ -436,7 +466,7 @@ def url_toggle_public(request, pk):
     """Activa/desactiva la página pública de una URL."""
     if request.method != 'POST':
         return redirect('url_detail', pk=pk)
-    monitored_url = get_object_or_404(MonitoredURL, pk=pk, user=request.user)
+    monitored_url = _get_url_or_404(pk, request)
     monitored_url.is_public = not monitored_url.is_public
     monitored_url.save(update_fields=['is_public'])
     state = 'activado' if monitored_url.is_public else 'desactivado'
@@ -459,6 +489,33 @@ def url_public(request, token):
     last_failures = all_logs.filter(status=MonitoredURL.STATUS_INACTIVE).order_by('-checked_at')[:10]
     recent_logs = all_logs[:30]
 
+    # Tiempo activo sin caídas
+    uptime_label = None
+    last_failure = all_logs.filter(status=MonitoredURL.STATUS_INACTIVE).order_by('-checked_at').first()
+    first_ok = all_logs.filter(status=MonitoredURL.STATUS_ACTIVE).order_by('checked_at').first()
+    reference = None
+    if last_failure:
+        ok_after = all_logs.filter(
+            status=MonitoredURL.STATUS_ACTIVE,
+            checked_at__gt=last_failure.checked_at
+        ).order_by('checked_at').first()
+        reference = ok_after.checked_at if ok_after else None
+    elif first_ok:
+        reference = first_ok.checked_at
+
+    if reference:
+        delta = timezone.now() - reference
+        total_seconds = int(delta.total_seconds())
+        days = delta.days
+        hours = (total_seconds % 86400) // 3600
+        minutes = (total_seconds % 3600) // 60
+        if days >= 1:
+            uptime_label = f'{days} día{"s" if days != 1 else ""} y {hours} hora{"s" if hours != 1 else ""}'
+        elif hours >= 1:
+            uptime_label = f'{hours} hora{"s" if hours != 1 else ""} y {minutes} minuto{"s" if minutes != 1 else ""}'
+        else:
+            uptime_label = f'{minutes} minuto{"s" if minutes != 1 else ""}'
+
     return render(request, 'monitor/url_public.html', {
         'monitored_url': monitored_url,
         'total_checks': total_checks,
@@ -468,6 +525,7 @@ def url_public(request, token):
         'avg_response': avg_response,
         'last_failures': last_failures,
         'recent_logs': recent_logs,
+        'uptime_label': uptime_label,
     })
 
 
