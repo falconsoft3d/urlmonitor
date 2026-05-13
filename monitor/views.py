@@ -1,4 +1,5 @@
 import requests as http_requests
+from django.db import models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
@@ -54,10 +55,19 @@ def dashboard(request):
 def url_list(request):
     urls = _url_qs(request)
     status_filter = request.GET.get('status')
+    search_query = request.GET.get('q', '').strip()
     valid_statuses = {MonitoredURL.STATUS_ACTIVE, MonitoredURL.STATUS_INACTIVE, MonitoredURL.STATUS_UNKNOWN}
     if status_filter in valid_statuses:
         urls = urls.filter(status=status_filter)
-    return render(request, 'monitor/url_list.html', {'urls': urls, 'status_filter': status_filter})
+    if search_query:
+        urls = urls.filter(
+            models.Q(name__icontains=search_query) | models.Q(url__icontains=search_query)
+        )
+    return render(request, 'monitor/url_list.html', {
+        'urls': urls,
+        'status_filter': status_filter,
+        'search_query': search_query,
+    })
 
 
 @login_required
