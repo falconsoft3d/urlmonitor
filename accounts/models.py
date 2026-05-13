@@ -9,6 +9,7 @@ def avatar_upload_path(instance, filename):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     avatar = models.ImageField(upload_to=avatar_upload_path, null=True, blank=True)
+    dark_mode = models.BooleanField(default=False)
 
     def __str__(self):
         return f'Perfil de {self.user.username}'

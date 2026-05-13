@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .forms import RegisterForm, ProfileDataForm, AvatarForm, StyledPasswordChangeForm, UserEditForm
 from .models import UserProfile
 
@@ -191,3 +193,12 @@ def profile_view(request):
         'profile': profile,
         'tab': tab,
     })
+
+
+@login_required
+@require_POST
+def toggle_dark_mode(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    profile.dark_mode = not profile.dark_mode
+    profile.save(update_fields=['dark_mode'])
+    return JsonResponse({'dark_mode': profile.dark_mode})

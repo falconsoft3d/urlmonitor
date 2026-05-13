@@ -3,13 +3,15 @@ from django.contrib.auth.models import User
 from .models import MonitoredURL, SiteConfig
 
 INPUT_CLASSES = (
-    'w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 '
+    'w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 '
+    'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 '
     'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent '
-    'transition placeholder-gray-400'
+    'transition placeholder-gray-400 dark:placeholder-gray-500'
 )
 
 SELECT_CLASSES = (
-    'w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 bg-white '
+    'w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2.5 '
+    'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 '
     'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition'
 )
 

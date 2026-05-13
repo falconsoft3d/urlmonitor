@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" {% if request.user.is_authenticated and request.user.profile.dark_mode %}class="dark"{% endif %}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
@@ -45,9 +46,17 @@
       background: #1e1b4b; color: #fff; font-size: 0.75rem; white-space: nowrap;
       padding: 4px 10px; border-radius: 6px; pointer-events: none; z-index: 999;
     }
+    /* Pulsing ring for inactive URLs card */
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.7), 0 0 0 4px rgba(248, 113, 113, 0.4); }
+      50%       { box-shadow: 0 0 0 8px rgba(248, 113, 113, 0), 0 0 0 12px rgba(248, 113, 113, 0); }
+    }
+    .animate-pulse-ring {
+      animation: pulse-ring 1.4s ease-in-out infinite;
+    }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
 
 <!-- ===== MOBILE OVERLAY ===== -->
 <div id="sidebar-overlay"
@@ -57,7 +66,7 @@
 
 <!-- ===== SIDEBAR ===== -->
 <aside id="sidebar"
-  class="fixed top-0 left-0 h-full bg-indigo-900 flex flex-col z-40
+  class="fixed top-0 left-0 h-full bg-indigo-900 dark:bg-gray-800 flex flex-col z-40
          -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
 
   <!-- Logo -->
@@ -267,7 +276,7 @@
 <div class="main-content min-h-screen flex flex-col">
 
   <!-- Top bar -->
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-20">
+  <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20">
     <div class="flex items-center justify-between h-16 px-4 sm:px-6">
 
       <!-- Hamburger (mobile) -->
@@ -280,22 +289,52 @@
 
       <!-- Page title -->
       <div class="flex-1 ml-4 lg:ml-0">
-        <h2 class="text-base font-semibold text-gray-800">{% block page_title %}{% endblock %}</h2>
+        <h2 class="text-base font-semibold text-gray-800 dark:text-gray-100">{% block page_title %}{% endblock %}</h2>
       </div>
+
+      <!-- Contador de verificaciones hoy -->
+      <a href="{% url 'log_list' %}"
+        title="Verificaciones realizadas hoy"
+        class="hidden sm:flex items-center gap-2 mr-3 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-500 dark:text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+        <div class="leading-none">
+          <span class="text-sm font-bold text-indigo-700 dark:text-indigo-300">{{ checks_today }}</span>
+          <span class="text-xs text-indigo-500 dark:text-indigo-400 ml-1">revisiones hoy</span>
+        </div>
+      </a>
 
       <!-- Search bar -->
       <form method="get" action="{% url 'url_list' %}" class="relative hidden sm:block mr-2">
         <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar URL…"
-          class="pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 w-52 bg-gray-50 shadow-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          class="pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 w-52 bg-gray-50 dark:bg-gray-700 shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
         </svg>
       </form>
 
+      <!-- Dark mode toggle -->
+      <button id="dark-mode-toggle"
+        title="Cambiar modo oscuro"
+        class="hidden sm:flex items-center justify-center p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition focus:outline-none">
+        <!-- Moon (mostrar en modo claro para activar dark) -->
+        <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {% if request.user.profile.dark_mode %}hidden{% else %}block{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+        </svg>
+        <!-- Sun (mostrar en modo oscuro para volver a claro) -->
+        <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 {% if request.user.profile.dark_mode %}block{% else %}hidden{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 3v1m0 16v1m8.66-9H21M3 12H2m15.36-6.36l-.71.71M7.05 16.95l-.71.71M18.36 17.66l-.71-.71M7.05 7.05l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      </button>
+
       <!-- Right: user dropdown -->
       <div class="relative hidden sm:block">
         <button id="profile-btn" onclick="toggleProfileMenu()"
-          class="flex items-center gap-2 text-sm px-3 py-2 rounded-xl hover:bg-gray-100 transition">
+          class="flex items-center gap-2 text-sm px-3 py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition">
           {% if request.user.profile.avatar %}
           <img src="{{ request.user.profile.avatar.url }}" alt=""
             class="w-7 h-7 rounded-full object-cover border border-gray-200">
@@ -304,7 +343,7 @@
             {{ request.user.username|first|upper }}
           </span>
           {% endif %}
-          <span class="font-medium text-gray-700">{{ request.user.username }}</span>
+          <span class="font-medium text-gray-700 dark:text-gray-200">{{ request.user.username }}</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
@@ -312,11 +351,11 @@
 
         <!-- Dropdown -->
         <div id="profile-menu"
-          class="hidden absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+          class="hidden absolute right-0 top-full mt-2 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50">
 
-          <div class="px-4 py-3 border-b border-gray-100">
-            <p class="text-sm font-semibold text-gray-800 truncate">{{ request.user.username }}</p>
-            <p class="text-xs text-gray-400 truncate">{{ request.user.email }}</p>
+          <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{{ request.user.username }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ request.user.email }}</p>
           </div>
 
           <a href="{% url 'profile' %}?tab=datos"
@@ -368,10 +407,10 @@
   <div class="px-4 sm:px-6 pt-4 space-y-2">
     {% for message in messages %}
     <div class="flex items-center justify-between px-4 py-3 rounded-lg border text-sm
-      {% if message.tags == 'success' %}bg-green-50 text-green-800 border-green-200
-      {% elif message.tags == 'error' %}bg-red-50 text-red-800 border-red-200
-      {% elif message.tags == 'warning' %}bg-yellow-50 text-yellow-800 border-yellow-200
-      {% else %}bg-blue-50 text-blue-800 border-blue-200{% endif %}">
+      {% if message.tags == 'success' %}bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700
+      {% elif message.tags == 'error' %}bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-700
+      {% elif message.tags == 'warning' %}bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700
+      {% else %}bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-700{% endif %}">
       <span>{{ message }}</span>
       <button onclick="this.parentElement.remove()" class="ml-4 opacity-50 hover:opacity-100 text-lg leading-none">&times;</button>
     </div>
@@ -385,8 +424,8 @@
   </main>
 
   <!-- Footer -->
-  <footer class="border-t border-gray-200 bg-white px-6 py-4">
-    <p class="text-center text-gray-400 text-xs">
+  <footer class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4">
+    <p class="text-center text-gray-400 dark:text-gray-500 text-xs">
       © 2026 URLMonitor &mdash; Monitoreo de disponibilidad web
     </p>
   </footer>
@@ -519,6 +558,39 @@
 </script>
 
 {% block extra_js %}{% endblock %}
+
+<script>
+  // ===== Dark mode toggle =====
+  (function () {
+    const btn = document.getElementById('dark-mode-toggle');
+    if (!btn) return;
+    const html = document.documentElement;
+    const iconSun = document.getElementById('icon-sun');
+    const iconMoon = document.getElementById('icon-moon');
+
+    btn.addEventListener('click', function () {
+      fetch('{% url "toggle_dark_mode" %}', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.dark_mode) {
+            html.classList.add('dark');
+            iconSun.classList.remove('hidden'); iconSun.classList.add('block');
+            iconMoon.classList.remove('block'); iconMoon.classList.add('hidden');
+          } else {
+            html.classList.remove('dark');
+            iconSun.classList.remove('block'); iconSun.classList.add('hidden');
+            iconMoon.classList.remove('hidden'); iconMoon.classList.add('block');
+          }
+        });
+    });
+  })();
+</script>
 
 </body>
 </html>

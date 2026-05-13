@@ -5,7 +5,7 @@
 {% block content %}
 <div class="max-w-md mx-auto">
 
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8 text-center">
 
     <!-- Icon -->
     <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-2xl mb-5">
@@ -15,13 +15,13 @@
       </svg>
     </div>
 
-    <h1 class="text-2xl font-bold text-gray-900 mb-2">Eliminar URL</h1>
-    <p class="text-gray-500 text-sm mb-2">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Eliminar URL</h1>
+    <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">
       ¿Estás seguro de que deseas eliminar esta URL?
     </p>
-    <div class="bg-gray-50 rounded-xl px-4 py-3 mb-6 text-left">
-      <p class="font-semibold text-gray-900 text-sm">{{ monitored_url.name }}</p>
-      <p class="text-gray-500 text-xs truncate mt-0.5">{{ monitored_url.url }}</p>
+    <div class="bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3 mb-6 text-left">
+      <p class="font-semibold text-gray-900 dark:text-white text-sm">{{ monitored_url.name }}</p>
+      <p class="text-gray-500 dark:text-gray-400 text-xs truncate mt-0.5">{{ monitored_url.url }}</p>
     </div>
     <p class="text-red-500 text-xs mb-6">Esta acción no se puede deshacer.</p>
 
@@ -34,7 +34,7 @@
         </button>
       </form>
       <a href="{% url 'url_list' %}"
-        class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl font-semibold transition text-sm">
+        class="flex-1 text-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl font-semibold transition text-sm">
         Cancelar
       </a>
     </div>

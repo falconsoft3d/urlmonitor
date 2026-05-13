@@ -32,3 +32,21 @@ def error_count_today(request):
         ).count()
 
     return {'error_count_today': count}
+
+
+def checks_today(request):
+    """Inyecta el total de verificaciones realizadas hoy."""
+    if not request.user.is_authenticated:
+        return {'checks_today': 0}
+
+    today = timezone.now().date()
+
+    if request.user.is_staff:
+        count = CheckLog.objects.filter(checked_at__date=today).count()
+    else:
+        count = CheckLog.objects.filter(
+            checked_at__date=today,
+            monitored_url__users=request.user,
+        ).count()
+
+    return {'checks_today': count}

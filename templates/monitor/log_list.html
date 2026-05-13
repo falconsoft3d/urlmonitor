@@ -9,8 +9,8 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-gray-900">Logs de verificación</h1>
-      <p class="text-sm text-gray-500 mt-1">Historial de todas las verificaciones realizadas</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Logs de verificación</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Historial de todas las verificaciones realizadas</p>
     </div>
     <span class="inline-flex items-center gap-1.5 bg-indigo-100 text-indigo-700 text-sm font-semibold px-3 py-1.5 rounded-full">
       {{ total }} registro{{ total|pluralize:",s" }}
@@ -18,42 +18,42 @@
   </div>
 
   {% if page_obj %}
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
     <table class="w-full text-sm">
       <thead>
-        <tr class="bg-gray-50 border-b border-gray-100">
-          <th class="text-left px-5 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">URL</th>
-          <th class="text-left px-5 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Fecha</th>
-          <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Estado</th>
-          <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Código</th>
-          <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs hidden lg:table-cell">Respuesta</th>
-          <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs hidden xl:table-cell">Error</th>
+        <tr class="bg-gray-50 dark:bg-gray-700 border-b border-gray-100 dark:border-gray-700">
+          <th class="text-left px-5 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide text-xs">URL</th>
+          <th class="text-left px-5 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide text-xs">Fecha</th>
+          <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide text-xs">Estado</th>
+          <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide text-xs">Código</th>
+          <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide text-xs hidden lg:table-cell">Respuesta</th>
+          <th class="text-left px-4 py-3 font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide text-xs hidden xl:table-cell">Error</th>
           <th class="px-4 py-3"></th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-50">
+      <tbody class="divide-y divide-gray-50 dark:divide-gray-700">
         {% for log in page_obj %}
-        <tr class="hover:bg-gray-50 transition">
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
           <td class="px-5 py-3">
             <a href="{% url 'url_detail' log.monitored_url.pk %}"
-              class="font-medium text-indigo-700 hover:underline truncate max-w-[180px] block">
+              class="font-medium text-indigo-700 dark:text-indigo-400 hover:underline truncate max-w-[180px] block">
               {{ log.monitored_url.name }}
             </a>
-            <span class="text-xs text-gray-400 truncate block max-w-[180px]">{{ log.monitored_url.url }}</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 truncate block max-w-[180px]">{{ log.monitored_url.url }}</span>
           </td>
-          <td class="px-5 py-3 text-gray-600 whitespace-nowrap">
+          <td class="px-5 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">
             {{ log.checked_at|date:"d/m/Y" }}
-            <span class="text-gray-400 text-xs block">{{ log.checked_at|time:"H:i:s" }}</span>
+            <span class="text-gray-400 dark:text-gray-500 text-xs block">{{ log.checked_at|time:"H:i:s" }}</span>
           </td>
           <td class="px-4 py-3">
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ log.status_badge_classes }}">
               {{ log.status_label }}
             </span>
           </td>
-          <td class="px-4 py-3 text-gray-700 font-mono">
+          <td class="px-4 py-3 text-gray-700 dark:text-gray-300 font-mono">
             {% if log.status_code %}{{ log.status_code }}{% else %}&mdash;{% endif %}
           </td>
-          <td class="px-4 py-3 text-gray-600 hidden lg:table-cell">
+          <td class="px-4 py-3 text-gray-600 dark:text-gray-400 hidden lg:table-cell">
             {% if log.response_time %}{{ log.response_time }} ms{% else %}&mdash;{% endif %}
           </td>
           <td class="px-4 py-3 text-red-500 text-xs hidden xl:table-cell">
@@ -61,7 +61,7 @@
           </td>
           <td class="px-4 py-3 text-right">
             <a href="{% url 'url_detail' log.monitored_url.pk %}"
-              class="text-xs text-indigo-600 hover:underline whitespace-nowrap">Ver URL</a>
+              class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline whitespace-nowrap">Ver URL</a>
           </td>
         </tr>
         {% endfor %}

@@ -7,8 +7,8 @@
 <!-- Header -->
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">{% if request.user.is_staff %}Todas las URLs{% else %}URLs{% endif %}</h1>
-    <p class="text-gray-500 text-sm mt-1">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{% if request.user.is_staff %}Todas las URLs{% else %}URLs{% endif %}</h1>
+    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
       {{ urls|length }} URL{{ urls|length|pluralize:"s" }} registrada{{ urls|length|pluralize:"s" }}
       {% if status_filter %}
         <a href="{% url 'url_list' %}" class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
@@ -25,7 +25,7 @@
   </div>
   <div class="flex flex-wrap gap-3 items-center">
     <a href="{% url 'dashboard' %}" title="Dashboard"
-      class="inline-flex items-center bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 p-2.5 rounded-xl transition shadow-sm">
+      class="inline-flex items-center bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 p-2.5 rounded-xl transition shadow-sm">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -34,7 +34,7 @@
     <form method="post" action="{% url 'url_check_all' %}">
       {% csrf_token %}
       <button type="button" id="btn-verify-all"
-        class="inline-flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-xl font-medium text-sm transition shadow-sm">
+        class="inline-flex items-center gap-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-xl font-medium text-sm transition shadow-sm">
         <svg id="btn-verify-all-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -53,26 +53,26 @@
 </div>
 
 <!-- Table -->
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
 
   {% if urls %}
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
-      <thead class="bg-gray-50">
+      <thead class="bg-gray-50 dark:bg-gray-700">
         <tr>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Usuario</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">URL</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Código</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Respuesta</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden xl:table-cell">Verificado</th>
-          <th class="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Acciones</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Estado</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Nombre</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden sm:table-cell">Usuario</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">URL</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Código</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Respuesta</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden xl:table-cell">Verificado</th>
+          <th class="text-right px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Acciones</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-100">
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
         {% for u in urls %}
-        <tr class="hover:bg-indigo-50 transition cursor-pointer" data-pk="{{ u.pk }}" onclick="window.location='{% url 'url_detail' u.pk %}'">
+        <tr class="hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition cursor-pointer" data-pk="{{ u.pk }}" onclick="window.location='{% url 'url_detail' u.pk %}'">
 
           <!-- Status -->
           <td class="px-6 py-4">
@@ -83,13 +83,13 @@
           </td>
 
           <!-- Name -->
-          <td class="px-6 py-4 font-medium text-gray-900 max-w-[140px] truncate">{{ u.name }}</td>
+          <td class="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 max-w-[140px] truncate">{{ u.name }}</td>
 
           <!-- Usuarios -->
           <td class="px-6 py-4 hidden sm:table-cell">
             <div class="flex flex-wrap gap-1">
               {% for usr in u.users.all %}
-              <span class="inline-flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">
+              <span class="inline-flex items-center gap-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-full px-2.5 py-1">
                 {{ usr.username }}
               </span>
               {% empty %}
@@ -99,7 +99,7 @@
           </td>
 
           <!-- URL -->
-          <td class="px-6 py-4 text-gray-500 hidden md:table-cell max-w-xs">
+          <td class="px-6 py-4 text-gray-500 dark:text-gray-400 hidden md:table-cell max-w-xs">
             <a href="{{ u.url }}" target="_blank" rel="noopener noreferrer"
               class="hover:text-indigo-600 transition truncate block max-w-xs" title="{{ u.url }}"
               onclick="event.stopPropagation()">
@@ -122,12 +122,12 @@
           </td>
 
           <!-- Response time -->
-          <td class="px-6 py-4 text-gray-500 hidden lg:table-cell font-mono text-xs">
+          <td class="px-6 py-4 text-gray-500 dark:text-gray-400 hidden lg:table-cell font-mono text-xs">
             <span class="response-time">{% if u.response_time %}{{ u.response_time|floatformat:0 }} ms{% else %}&mdash;{% endif %}</span>
           </td>
 
           <!-- Last checked -->
-          <td class="px-6 py-4 text-gray-400 text-xs hidden xl:table-cell">
+          <td class="px-6 py-4 text-gray-400 dark:text-gray-500 text-xs hidden xl:table-cell">
             {% if u.last_checked %}
               {{ u.last_checked|date:"d/m/Y H:i" }}
             {% else %}

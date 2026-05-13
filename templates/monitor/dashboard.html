@@ -7,14 +7,14 @@
 <!-- Header -->
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
   <div>
-    <h1 class="text-2xl font-bold text-gray-900">Resumen general</h1>
-    <p class="text-gray-500 text-sm mt-1">Bienvenido de vuelta, <strong>{{ request.user.username }}</strong></p>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Resumen general</h1>
+    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Bienvenido de vuelta, <strong>{{ request.user.username }}</strong></p>
   </div>
   <div class="flex gap-3">
     <form method="post" action="{% url 'url_check_all' %}">
       {% csrf_token %}
       <button type="submit"
-        class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-5 py-2.5 rounded-xl font-medium text-sm transition shadow-sm">
+        class="inline-flex items-center gap-2 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 px-5 py-2.5 rounded-xl font-medium text-sm transition shadow-sm">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -56,7 +56,9 @@
   </a>
 
   <!-- Inactivas -->
-  <a href="{% url 'url_list' %}?status=inactive" class="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-transform block">
+  <a href="{% url 'url_list' %}?status=inactive"
+    class="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-transform block
+           {% if inactive > 0 %}ring-4 ring-red-400 ring-offset-2 ring-offset-transparent animate-pulse-ring{% endif %}">
     <p class="text-red-100 text-xs font-semibold uppercase tracking-wide mb-1">Inactivas</p>
     <p class="text-4xl font-extrabold">{{ inactive }}</p>
     <div class="mt-3 opacity-70">
@@ -81,9 +83,9 @@
 </div>
 
 <!-- Recent URLs -->
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-  <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-    <h2 class="text-lg font-bold text-gray-900">URLs recientes</h2>
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white">URLs recientes</h2>
     <a href="{% url 'url_list' %}" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
       Ver todas →
     </a>
@@ -92,33 +94,33 @@
   {% if recent_urls %}
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
-      <thead class="bg-gray-50">
+      <thead class="bg-gray-50 dark:bg-gray-700">
         <tr>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">URL</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Código</th>
-          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Respuesta</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Estado</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Nombre</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden md:table-cell">URL</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Código</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide hidden lg:table-cell">Respuesta</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-100">
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
         {% for u in recent_urls %}
-        <tr class="hover:bg-indigo-50 transition cursor-pointer" onclick="window.location='{% url 'url_detail' u.pk %}'">
+        <tr class="hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition cursor-pointer" onclick="window.location='{% url 'url_detail' u.pk %}'">
           <td class="px-6 py-4">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold {{ u.status_badge_classes }}">
               <span class="w-1.5 h-1.5 rounded-full {{ u.status_dot_classes }}"></span>
               {{ u.status_label }}
             </span>
           </td>
-          <td class="px-6 py-4 font-medium text-gray-900">{{ u.name }}</td>
-          <td class="px-6 py-4 text-gray-500 hidden md:table-cell max-w-xs truncate">
+          <td class="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">{{ u.name }}</td>
+          <td class="px-6 py-4 text-gray-500 dark:text-gray-400 hidden md:table-cell max-w-xs truncate">
             <a href="{{ u.url }}" target="_blank" rel="noopener noreferrer"
               class="hover:text-indigo-600 transition" onclick="event.stopPropagation()">{{ u.url }}</a>
           </td>
-          <td class="px-6 py-4 text-gray-500 hidden lg:table-cell">
+          <td class="px-6 py-4 text-gray-500 dark:text-gray-400 hidden lg:table-cell">
             {% if u.status_code %}{{ u.status_code }}{% else %}&mdash;{% endif %}
           </td>
-          <td class="px-6 py-4 text-gray-500 hidden lg:table-cell">
+          <td class="px-6 py-4 text-gray-500 dark:text-gray-400 hidden lg:table-cell">
             {% if u.response_time %}{{ u.response_time|floatformat:0 }} ms{% else %}&mdash;{% endif %}
           </td>
         </tr>

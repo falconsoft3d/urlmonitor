@@ -44,6 +44,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'monitor.context_processors.error_count_today',
+                'monitor.context_processors.checks_today',
             ],
         },
     },

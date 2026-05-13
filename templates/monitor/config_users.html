@@ -7,8 +7,8 @@
 <div class="max-w-2xl mx-auto">
 
   <!-- Breadcrumb -->
-  <nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
-    <span class="text-gray-600 font-medium">Administración</span>
+  <nav class="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 mb-6">
+    <span class="text-gray-600 dark:text-gray-400 font-medium">Administración</span>
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
     </svg>
@@ -16,30 +16,30 @@
   </nav>
 
   <!-- Config tabs -->
-  <div class="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
+  <div class="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-700 p-1 rounded-xl w-fit">
     <a href="{% url 'config_schedule' %}"
-      class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition">
+      class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition">
       Programación
     </a>
     <a href="{% url 'config_telegram' %}"
-      class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition">
+      class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition">
       Telegram
     </a>
     <a href="{% url 'config_users' %}"
-      class="px-4 py-2 rounded-lg text-sm font-medium bg-white text-indigo-700 shadow-sm">
+      class="px-4 py-2 rounded-lg text-sm font-medium bg-white dark:bg-gray-600 text-indigo-700 shadow-sm">
       Usuarios
     </a>
   </div>
 
   <form method="post">
     {% csrf_token %}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
 
       <!-- Status badge -->
       <div class="px-6 py-5 flex items-center justify-between">
         <div>
-          <h2 class="text-base font-bold text-gray-800">Registro de nuevos usuarios</h2>
-          <p class="text-sm text-gray-500 mt-0.5">Controla si los usuarios pueden crear cuentas nuevas.</p>
+          <h2 class="text-base font-bold text-gray-800 dark:text-gray-100">Registro de nuevos usuarios</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Controla si los usuarios pueden crear cuentas nuevas.</p>
         </div>
         {% if config.registration_enabled %}
         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
@@ -57,20 +57,20 @@
         <label class="flex items-center gap-4 cursor-pointer select-none">
           {{ form.registration_enabled }}
           <div>
-            <p class="text-sm font-semibold text-gray-800">{{ form.registration_enabled.label }}</p>
-            <p class="text-xs text-gray-400 mt-0.5">Si está desactivado, la página de registro mostrará un mensaje de acceso cerrado.</p>
+            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ form.registration_enabled.label }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Si está desactivado, la página de registro mostrará un mensaje de acceso cerrado.</p>
           </div>
         </label>
       </div>
 
       <!-- Info box -->
-      <div class="px-6 py-4 bg-indigo-50 rounded-b-2xl">
+      <div class="px-6 py-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-b-2xl">
         <div class="flex gap-3">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p class="text-xs text-indigo-700">
+          <p class="text-xs text-indigo-700 dark:text-indigo-300">
             Aunque el registro esté cerrado, los administradores pueden crear usuarios desde
             <a href="{% url 'user_list' %}" class="underline font-semibold">Administración → Usuarios</a>.
           </p>
