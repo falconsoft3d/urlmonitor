@@ -1,13 +1,13 @@
 from pathlib import Path
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Usa variable de entorno en producción
-SECRET_KEY = 'django-insecure-cambiar-en-produccion-usar-variable-de-entorno'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-cambiar-en-produccion-usar-variable-de-entorno')
 
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost 127.0.0.1').split()
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -70,9 +70,25 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Auth redirects
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Security (producción)
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    CSRF_TRUSTED_ORIGINS = os.environ.get(
+        'CSRF_TRUSTED_ORIGINS', 'https://urlmonitor.xyz https://www.urlmonitor.xyz'
+    ).split()

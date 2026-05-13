@@ -1,0 +1,185 @@
+{% extends "base_app.html" %}
+
+{% block title %}Logs de verificación — URLMonitor{% endblock %}
+{% block page_title %}Logs de verificación{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Logs de verificación</h1>
+      <p class="text-sm text-gray-500 mt-1">Historial de todas las verificaciones realizadas</p>
+    </div>
+    <span class="inline-flex items-center gap-1.5 bg-indigo-100 text-indigo-700 text-sm font-semibold px-3 py-1.5 rounded-full">
+      {{ total }} registro{{ total|pluralize:",s" }}
+    </span>
+  </div>
+
+  {% if page_obj %}
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-gray-50 border-b border-gray-100">
+          <th class="text-left px-5 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">URL</th>
+          <th class="text-left px-5 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Fecha</th>
+          <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Estado</th>
+          <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Código</th>
+          <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs hidden lg:table-cell">Respuesta</th>
+          <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs hidden xl:table-cell">Error</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for log in page_obj %}
+        <tr class="hover:bg-gray-50 transition">
+          <td class="px-5 py-3">
+            <a href="{% url 'url_detail' log.monitored_url.pk %}"
+              class="font-medium text-indigo-700 hover:underline truncate max-w-[180px] block">
+              {{ log.monitored_url.name }}
+            </a>
+            <span class="text-xs text-gray-400 truncate block max-w-[180px]">{{ log.monitored_url.url }}</span>
+          </td>
+          <td class="px-5 py-3 text-gray-600 whitespace-nowrap">
+            {{ log.checked_at|date:"d/m/Y" }}
+            <span class="text-gray-400 text-xs block">{{ log.checked_at|time:"H:i:s" }}</span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ log.status_badge_classes }}">
+              {{ log.status_label }}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-gray-700 font-mono">
+            {% if log.status_code %}{{ log.status_code }}{% else %}&mdash;{% endif %}
+          </td>
+          <td class="px-4 py-3 text-gray-600 hidden lg:table-cell">
+            {% if log.response_time %}{{ log.response_time }} ms{% else %}&mdash;{% endif %}
+          </td>
+          <td class="px-4 py-3 text-red-500 text-xs hidden xl:table-cell">
+            {% if log.error %}{{ log.error }}{% else %}&mdash;{% endif %}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <a href="{% url 'url_detail' log.monitored_url.pk %}"
+              class="text-xs text-indigo-600 hover:underline whitespace-nowrap">Ver URL</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+    <!-- Info -->
+    <p class="text-sm text-gray-500">
+      Mostrando
+      <span class="font-semibold text-gray-700">{{ page_obj.start_index }}–{{ page_obj.end_index }}</span>
+      de
+      <span class="font-semibold text-gray-700">{{ total }}</span>
+      registros &nbsp;&bull;&nbsp; Página
+      <span class="font-semibold text-gray-700">{{ page_obj.number }}</span>
+      de {{ page_obj.paginator.num_pages }}
+    </p>
+
+    <!-- Controls -->
+    <nav class="inline-flex items-center gap-1">
+
+      {% if page_obj.has_previous %}
+      <a href="?page=1"
+        class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition"
+        title="Primera">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+        </svg>
+      </a>
+      <a href="?page={{ page_obj.previous_page_number }}"
+        class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition"
+        title="Anterior">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </a>
+      {% else %}
+      <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+        </svg>
+      </span>
+      <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </span>
+      {% endif %}
+
+      <!-- Window of 5 page numbers -->
+      {% for i in page_obj.paginator.page_range %}
+        {% if i >= page_obj.number|add:"-2" and i <= page_obj.number|add:"2" %}
+          {% if i == page_obj.number %}
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-600 text-white font-semibold text-sm shadow-sm">
+            {{ i }}
+          </span>
+          {% else %}
+          <a href="?page={{ i }}"
+            class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-gray-200 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition text-sm">
+            {{ i }}
+          </a>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}"
+        class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition"
+        title="Siguiente">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+      <a href="?page={{ page_obj.paginator.num_pages }}"
+        class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition"
+        title="Última">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M6 5l7 7-7 7" />
+        </svg>
+      </a>
+      {% else %}
+      <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </span>
+      <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl border border-gray-100 text-gray-300 cursor-not-allowed">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M6 5l7 7-7 7" />
+        </svg>
+      </span>
+      {% endif %}
+
+    </nav>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 py-20 text-center">
+    <div class="flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    </div>
+    <p class="text-gray-500 font-medium">Aún no hay logs registrados</p>
+    <p class="text-gray-400 text-sm mt-1">Los registros aparecerán aquí cada vez que se verifique una URL.</p>
+    <a href="{% url 'url_list' %}"
+      class="inline-flex items-center gap-2 mt-5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition">
+      Ir a Mis URLs
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -20,6 +20,32 @@
       }
     }
   </script>
+  <style>
+    /* ===== SIDEBAR COLLAPSE ===== */
+    #sidebar { width: 16rem; transition: width 0.3s ease; overflow: hidden; }
+    body.sidebar-collapsed #sidebar { width: 4rem; }
+    .main-content { transition: margin-left 0.3s ease; }
+    @media (min-width: 1024px) {
+      .main-content { margin-left: 16rem; }
+      body.sidebar-collapsed .main-content { margin-left: 4rem; }
+    }
+    body.sidebar-collapsed .sb-label { display: none !important; }
+    body.sidebar-collapsed .sb-section { display: none !important; }
+    body.sidebar-collapsed .sb-item { justify-content: center !important; padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+    body.sidebar-collapsed .sb-logo-text { display: none !important; }
+    body.sidebar-collapsed .sb-logo { justify-content: center !important; }
+    body.sidebar-collapsed .sb-toggle-icon-open { display: none; }
+    body:not(.sidebar-collapsed) .sb-toggle-icon-close { display: none; }
+    body.sidebar-collapsed .sb-scheduler-widget { display: none !important; }
+    /* Tooltip on collapsed icons */
+    body.sidebar-collapsed [data-tip] { position: relative; }
+    body.sidebar-collapsed [data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
+      background: #1e1b4b; color: #fff; font-size: 0.75rem; white-space: nowrap;
+      padding: 4px 10px; border-radius: 6px; pointer-events: none; z-index: 999;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
@@ -31,115 +57,183 @@
 
 <!-- ===== SIDEBAR ===== -->
 <aside id="sidebar"
-  class="fixed top-0 left-0 h-full w-64 bg-indigo-900 flex flex-col z-40
+  class="fixed top-0 left-0 h-full bg-indigo-900 flex flex-col z-40
          -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
 
   <!-- Logo -->
-  <div class="flex items-center gap-3 px-6 py-5 border-b border-indigo-800">
+  <a href="{% url 'home' %}" class="sb-logo flex items-center gap-3 px-4 py-5 border-b border-indigo-800 hover:bg-indigo-800 transition">
     <div class="flex items-center justify-center w-9 h-9 bg-indigo-600 rounded-lg shrink-0">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     </div>
-    <div>
+    <div class="sb-logo-text">
       <p class="text-white font-bold text-base leading-tight">URLMonitor</p>
       <p class="text-indigo-400 text-xs">Panel de control</p>
     </div>
-  </div>
+  </a>
 
   <!-- Nav links -->
   <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
 
-    <p class="text-indigo-500 text-xs font-semibold uppercase tracking-widest px-3 mb-3">General</p>
+    <p class="sb-section text-indigo-500 text-xs font-semibold uppercase tracking-widest px-3 mb-3">General</p>
 
-    <a href="{% url 'dashboard' %}"
-      class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
+    <a href="{% url 'dashboard' %}" data-tip="Dashboard"
+      class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
              {% if request.resolver_match.url_name == 'dashboard' %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:bg-indigo-800 hover:text-white{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
       </svg>
-      Dashboard
+      <span class="sb-label">Dashboard</span>
     </a>
 
-    <a href="{% url 'url_list' %}"
-      class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
+    <a href="{% url 'url_list' %}" data-tip="Mis URLs"
+      class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
              {% if request.resolver_match.url_name == 'url_list' %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:bg-indigo-800 hover:text-white{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M4 6h16M4 10h16M4 14h16M4 18h16" />
       </svg>
-      Mis URLs
+      <span class="sb-label">Mis URLs</span>
     </a>
 
-    <p class="text-indigo-500 text-xs font-semibold uppercase tracking-widest px-3 pt-5 mb-3">Acciones</p>
+    <a href="{% url 'log_list' %}" data-tip="Logs"
+      class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
+             {% if request.resolver_match.url_name == 'log_list' %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:bg-indigo-800 hover:text-white{% endif %}">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <span class="sb-label">Logs</span>
+    </a>
 
-    <a href="{% url 'url_add' %}"
-      class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
+    <p class="sb-section text-indigo-500 text-xs font-semibold uppercase tracking-widest px-3 pt-5 mb-3">Acciones</p>
+
+    <a href="{% url 'url_add' %}" data-tip="Agregar URL"
+      class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
              {% if request.resolver_match.url_name == 'url_add' %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:bg-indigo-800 hover:text-white{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
       </svg>
-      Agregar URL
+      <span class="sb-label">Agregar URL</span>
     </a>
 
     <form method="post" action="{% url 'url_check_all' %}">
       {% csrf_token %}
-      <button type="submit"
-        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+      <button type="submit" data-tip="Verificar todas"
+        class="sb-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                text-indigo-200 hover:bg-indigo-800 hover:text-white transition cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        Verificar todas
+        <span class="sb-label">Verificar todas</span>
       </button>
     </form>
 
-    <p class="text-indigo-500 text-xs font-semibold uppercase tracking-widest px-3 pt-5 mb-3">Sitio</p>
+    {% if request.user.is_staff %}
+    <p class="sb-section text-indigo-500 text-xs font-semibold uppercase tracking-widest px-3 pt-5 mb-3">Administración</p>
 
-    <a href="{% url 'home' %}"
-      class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-             text-indigo-200 hover:bg-indigo-800 hover:text-white transition">
+    <a href="{% url 'user_list' %}" data-tip="Usuarios"
+      class="sb-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
+             {% if request.resolver_match.url_name in 'user_list,user_form' %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:bg-indigo-800 hover:text-white{% endif %}">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
-      Ir al Inicio
+      <span class="sb-label">Usuarios</span>
     </a>
+
+    <!-- Config sub-section -->
+    <div class="mt-1">
+      <button onclick="toggleConfigMenu()" data-tip="Configuración"
+        class="sb-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition
+               {% if request.resolver_match.url_name in 'config_schedule,config_telegram' %}bg-indigo-700 text-white{% else %}text-indigo-200 hover:bg-indigo-800 hover:text-white{% endif %}">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span class="sb-label flex-1 text-left">Configuración</span>
+        <svg id="config-chevron" xmlns="http://www.w3.org/2000/svg" class="sb-label h-4 w-4 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div id="config-submenu" class="sb-label pl-8 mt-1 space-y-0.5 {% if request.resolver_match.url_name not in 'config_schedule,config_telegram' %}hidden{% endif %}">
+        <a href="{% url 'config_schedule' %}"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition
+                 {% if request.resolver_match.url_name == 'config_schedule' %}text-white bg-indigo-700{% else %}text-indigo-300 hover:bg-indigo-800 hover:text-white{% endif %}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Verificación
+        </a>
+        <a href="{% url 'config_telegram' %}"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition
+                 {% if request.resolver_match.url_name == 'config_telegram' %}text-white bg-indigo-700{% else %}text-indigo-300 hover:bg-indigo-800 hover:text-white{% endif %}">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4 shrink-0">
+            <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+          </svg>
+          Telegram
+        </a>
+      </div>
+    </div>
+    {% endif %}
 
   </nav>
 
-  <!-- User info + logout -->
-  <div class="px-4 py-4 border-t border-indigo-800">
-    <div class="flex items-center gap-3 mb-3 px-2">
-      <div class="flex items-center justify-center w-8 h-8 bg-indigo-600 rounded-full shrink-0">
-        <span class="text-white text-xs font-bold">{{ request.user.username|first|upper }}</span>
-      </div>
-      <div class="min-w-0">
-        <p class="text-white text-sm font-semibold truncate">{{ request.user.username }}</p>
-        <p class="text-indigo-400 text-xs truncate">{{ request.user.email }}</p>
+  <!-- ===== Next-check timer widget ===== -->
+  <div id="scheduler-widget" class="mx-3 my-3 bg-indigo-900/60 rounded-2xl px-4 py-4 sb-scheduler-widget">
+    <p class="text-indigo-300 text-xs font-semibold uppercase tracking-widest mb-3 text-center">Próxima verificación</p>
+    <div class="flex items-center justify-center">
+      <!-- SVG ring -->
+      <div class="relative w-24 h-24">
+        <svg class="w-24 h-24 -rotate-90" viewBox="0 0 80 80">
+          <!-- track -->
+          <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="6"/>
+          <!-- progress ring -->
+          <circle id="sched-ring" cx="40" cy="40" r="34"
+            fill="none" stroke="#818cf8" stroke-width="6"
+            stroke-linecap="round"
+            stroke-dasharray="213.6"
+            stroke-dashoffset="213.6"
+            style="transition: stroke-dashoffset 1s linear;"/>
+        </svg>
+        <!-- center label -->
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span id="sched-mins" class="text-white text-2xl font-bold leading-none">--</span>
+          <span class="text-indigo-300 text-[10px] font-medium mt-0.5">min</span>
+        </div>
       </div>
     </div>
-    <form method="post" action="{% url 'logout' %}">
-      {% csrf_token %}
-      <button type="submit"
-        class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium
-               text-indigo-300 hover:bg-red-600 hover:text-white transition cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-        Cerrar sesión
-      </button>
-    </form>
+    <p id="sched-status" class="text-center text-indigo-400 text-xs mt-3">Cargando...</p>
+  </div>
+
+  <!-- Collapse toggle button -->
+  <div class="px-3 py-3 border-t border-indigo-800">
+    <button onclick="toggleCollapse()"
+      class="sb-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+             text-indigo-300 hover:bg-indigo-800 hover:text-white transition cursor-pointer" data-tip="Expandir">
+      <!-- Icon when expanded: arrow left -->
+      <svg class="sb-toggle-icon-open h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7M18 19l-7-7 7-7" />
+      </svg>
+      <!-- Icon when collapsed: arrow right -->
+      <svg class="sb-toggle-icon-close h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M6 5l7 7-7 7" />
+      </svg>
+      <span class="sb-label">Minimizar</span>
+    </button>
   </div>
 
 </aside>
 
 <!-- ===== MAIN AREA ===== -->
-<div class="lg:ml-64 min-h-screen flex flex-col">
+<div class="main-content min-h-screen flex flex-col">
 
   <!-- Top bar -->
   <header class="bg-white border-b border-gray-200 sticky top-0 z-20">
@@ -158,12 +252,72 @@
         <h2 class="text-base font-semibold text-gray-800">{% block page_title %}{% endblock %}</h2>
       </div>
 
-      <!-- Right: user chip (desktop) -->
-      <div class="hidden sm:flex items-center gap-2 text-sm text-gray-500">
-        <span class="flex items-center justify-center w-7 h-7 bg-indigo-100 text-indigo-700 rounded-full font-bold text-xs">
-          {{ request.user.username|first|upper }}
-        </span>
-        <span class="font-medium text-gray-700">{{ request.user.username }}</span>
+      <!-- Right: user dropdown -->
+      <div class="relative hidden sm:block">
+        <button id="profile-btn" onclick="toggleProfileMenu()"
+          class="flex items-center gap-2 text-sm px-3 py-2 rounded-xl hover:bg-gray-100 transition">
+          {% if request.user.profile.avatar %}
+          <img src="{{ request.user.profile.avatar.url }}" alt=""
+            class="w-7 h-7 rounded-full object-cover border border-gray-200">
+          {% else %}
+          <span class="flex items-center justify-center w-7 h-7 bg-indigo-100 text-indigo-700 rounded-full font-bold text-xs">
+            {{ request.user.username|first|upper }}
+          </span>
+          {% endif %}
+          <span class="font-medium text-gray-700">{{ request.user.username }}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <!-- Dropdown -->
+        <div id="profile-menu"
+          class="hidden absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
+
+          <div class="px-4 py-3 border-b border-gray-100">
+            <p class="text-sm font-semibold text-gray-800 truncate">{{ request.user.username }}</p>
+            <p class="text-xs text-gray-400 truncate">{{ request.user.email }}</p>
+          </div>
+
+          <a href="{% url 'profile' %}?tab=datos"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Mis datos
+          </a>
+          <a href="{% url 'profile' %}?tab=password"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            Cambiar contraseña
+          </a>
+          <a href="{% url 'profile' %}?tab=avatar"
+            class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Cambiar imagen
+          </a>
+
+          <div class="border-t border-gray-100 mt-1 pt-1">
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit"
+                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -200,6 +354,7 @@
 </div>
 
 <script>
+  // ===== Mobile sidebar toggle =====
   function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
@@ -212,6 +367,115 @@
       overlay.classList.remove('hidden');
     }
   }
+
+  // ===== Sidebar collapse (desktop) =====
+  function toggleCollapse() {
+    const collapsed = document.body.classList.toggle('sidebar-collapsed');
+    localStorage.setItem('sidebar-collapsed', collapsed ? '1' : '0');
+  }
+
+  // Restore collapse state on load
+  (function () {
+    if (localStorage.getItem('sidebar-collapsed') === '1') {
+      document.body.classList.add('sidebar-collapsed');
+    }
+  })();
+
+  // ===== Config submenu =====
+  function toggleConfigMenu() {
+    const menu = document.getElementById('config-submenu');
+    const chevron = document.getElementById('config-chevron');
+    if (!menu) return;
+    const hidden = menu.classList.toggle('hidden');
+    if (chevron) chevron.style.transform = hidden ? '' : 'rotate(180deg)';
+  }
+
+  // Auto-rotate chevron if submenu is open on load
+  (function () {
+    const menu = document.getElementById('config-submenu');
+    const chevron = document.getElementById('config-chevron');
+    if (menu && chevron && !menu.classList.contains('hidden')) {
+      chevron.style.transform = 'rotate(180deg)';
+    }
+  })();
+
+  // ===== Profile dropdown =====
+  function toggleProfileMenu() {
+    document.getElementById('profile-menu').classList.toggle('hidden');
+  }
+
+  document.addEventListener('click', function (e) {
+    const btn = document.getElementById('profile-btn');
+    const menu = document.getElementById('profile-menu');
+    if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  // ===== Scheduler countdown widget =====
+  (function () {
+    const CIRC = 2 * Math.PI * 34;   // 213.6 — must match stroke-dasharray
+    const ring = document.getElementById('sched-ring');
+    const minsEl = document.getElementById('sched-mins');
+    const statusEl = document.getElementById('sched-status');
+    const widget = document.getElementById('scheduler-widget');
+
+    if (!ring) return;
+
+    let totalSecs = null;
+    let remainSecs = null;
+    let ticker = null;
+
+    function setRing(remain, total) {
+      if (!total) { ring.style.strokeDashoffset = CIRC; return; }
+      const filled = 1 - (remain / total);        // 0 = empty, 1 = full
+      ring.style.strokeDashoffset = CIRC * (1 - filled);
+    }
+
+    function tick() {
+      if (remainSecs === null) return;
+      remainSecs = Math.max(0, remainSecs - 1);
+      const mins = Math.ceil(remainSecs / 60);
+      minsEl.textContent = mins > 0 ? mins : '0';
+      setRing(remainSecs, totalSecs);
+      if (remainSecs === 0) {
+        statusEl.textContent = 'Verificando ahora…';
+        ring.style.stroke = '#34d399';   // green flash
+        setTimeout(fetchStatus, 3000);   // re-fetch after 3s
+      }
+    }
+
+    function fetchStatus() {
+      fetch('/scheduler-status/')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data || !data.enabled) {
+            // Mostrar estado desactivado en lugar de ocultar
+            minsEl.textContent = '--';
+            ring.style.strokeDashoffset = CIRC;
+            ring.style.stroke = 'rgba(255,255,255,0.2)';
+            statusEl.textContent = 'Desactivado';
+            return;
+          }
+          totalSecs = data.interval_minutes * 60;
+          remainSecs = data.seconds_remaining;
+          const mins = Math.ceil(remainSecs / 60);
+          minsEl.textContent = mins > 0 ? mins : '0';
+          ring.style.stroke = '#818cf8';
+          setRing(remainSecs, totalSecs);
+          statusEl.textContent = 'Cada ' + data.interval_minutes + ' min';
+        })
+        .catch(() => {
+          minsEl.textContent = '--';
+          statusEl.textContent = 'Sin datos';
+        });
+    }
+
+    // Poll API every 30s, tick every 1s
+    fetchStatus();
+    setInterval(fetchStatus, 30000);
+    ticker = setInterval(tick, 1000);
+  })();
 </script>
 
 </body>

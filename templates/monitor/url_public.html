@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es" class="bg-gray-50">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ monitored_url.name }} — Estado del servicio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200">
+    <div class="max-w-3xl mx-auto px-4 py-5 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="inline-block w-3 h-3 rounded-full shrink-0
+          {% if monitored_url.status == 'active' %}bg-green-500 shadow-[0_0_0_4px_rgba(34,197,94,0.2)]
+          {% elif monitored_url.status == 'inactive' %}bg-red-500 shadow-[0_0_0_4px_rgba(239,68,68,0.2)]
+          {% else %}bg-gray-400{% endif %}"></span>
+        <div class="min-w-0">
+          <h1 class="text-lg font-bold text-gray-900 truncate">{{ monitored_url.name }}</h1>
+          <a href="{{ monitored_url.url }}" target="_blank" rel="noopener"
+            class="text-xs text-gray-400 hover:text-indigo-600 transition truncate block">
+            {{ monitored_url.url }}
+          </a>
+        </div>
+      </div>
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold shrink-0
+        {% if monitored_url.status == 'active' %}bg-green-100 text-green-800
+        {% elif monitored_url.status == 'inactive' %}bg-red-100 text-red-800
+        {% else %}bg-gray-100 text-gray-600{% endif %}">
+        {{ monitored_url.get_status_display }}
+      </span>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+    <!-- KPI strip -->
+    {% if total_checks %}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Disponibilidad</p>
+        <p class="text-3xl font-extrabold
+          {% if uptime_pct >= 99 %}text-green-600{% elif uptime_pct >= 90 %}text-yellow-500{% else %}text-red-600{% endif %}">
+          {{ uptime_pct }}%
+        </p>
+        <div class="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div class="h-full rounded-full
+            {% if uptime_pct >= 99 %}bg-green-500{% elif uptime_pct >= 90 %}bg-yellow-400{% else %}bg-red-500{% endif %}"
+            style="width:{{ uptime_pct }}%"></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Caídas</p>
+        <p class="text-3xl font-extrabold
+          {% if total_fail == 0 %}text-green-600{% elif total_fail < 5 %}text-yellow-500{% else %}text-red-600{% endif %}">
+          {{ total_fail }}
+        </p>
+        <p class="text-xs text-gray-400 mt-1">eventos de error</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Verificaciones</p>
+        <p class="text-3xl font-extrabold text-gray-800">{{ total_checks }}</p>
+        <p class="text-xs text-gray-400 mt-1">total realizadas</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-2">Resp. promedio</p>
+        <p class="text-3xl font-extrabold text-gray-800">
+          {% if avg_response %}{{ avg_response }}<span class="text-base font-semibold text-gray-400"> ms</span>{% else %}&mdash;{% endif %}
+        </p>
+      </div>
+
+    </div>
+    {% endif %}
+
+    <!-- Last failures -->
+    {% if last_failures %}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856C18.07 19 19 17.657 19 16.122V9.878c0-1.535-.929-2.878-2.082-2.878H7.082C5.929 7 5 8.343 5 9.878v6.244C5 17.657 5.93 19 7.062 19z"/>
+        </svg>
+        <h2 class="text-sm font-bold text-gray-800">Historial de caídas</h2>
+        <span class="ml-auto text-xs text-gray-400">{{ total_fail }} en total · mostrando últimas 10</span>
+      </div>
+      <ul class="divide-y divide-gray-50">
+        {% for fail in last_failures %}
+        <li class="px-5 py-3.5 flex items-center gap-4">
+          <div class="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-gray-800">
+              {{ fail.checked_at|date:"d/m/Y" }}
+              <span class="text-gray-500 font-normal">{{ fail.checked_at|time:"H:i:s" }}</span>
+            </p>
+            <p class="text-xs text-gray-400 mt-0.5">
+              {% if fail.error %}{{ fail.error }}{% elif fail.status_code %}Código HTTP {{ fail.status_code }}{% else %}Sin respuesta del servidor{% endif %}
+            </p>
+          </div>
+          {% if fail.status_code %}
+          <span class="text-xs font-bold font-mono text-red-600 bg-red-50 border border-red-100 px-2.5 py-1 rounded-lg shrink-0">
+            {{ fail.status_code }}
+          </span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% else %}
+    {% if total_checks %}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+      <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <p class="text-gray-700 font-semibold">Sin caídas registradas</p>
+      <p class="text-sm text-gray-400 mt-1">El servicio ha estado disponible en todos los checks.</p>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Recent activity mini-timeline -->
+    {% if recent_logs %}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-bold text-gray-800">Actividad reciente</h2>
+        <p class="text-xs text-gray-400 mt-0.5">Últimos {{ recent_logs|length }} checks</p>
+      </div>
+      <!-- Mini bar chart of last checks -->
+      <div class="px-5 py-4 flex items-end gap-1 h-20 overflow-x-auto">
+        {% for log in recent_logs reversed %}
+        <div class="group relative flex flex-col items-center justify-end flex-1 min-w-[10px] h-full">
+          <div class="w-full rounded-sm transition
+            {% if log.status == 'active' %}bg-green-400 hover:bg-green-500{% else %}bg-red-400 hover:bg-red-500{% endif %}"
+            style="height: {% if log.response_time %}{{ log.response_time|floatformat:0 }}{% else %}8{% endif %}px; max-height: 100%; min-height: 8px;"
+            title="{{ log.checked_at|date:'d/m H:i' }} — {% if log.status == 'active' %}OK{% else %}Caída{% endif %}{% if log.response_time %} · {{ log.response_time }}ms{% endif %}">
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="px-5 pb-3 flex justify-between text-xs text-gray-400">
+        <span>← Más antiguo</span>
+        <span>Más reciente →</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <p class="text-center text-xs text-gray-400 pb-4">
+      Monitoreado con <span class="font-semibold text-indigo-500">URLMonitor</span> ·
+      Última verificación:
+      {% if monitored_url.last_checked %}{{ monitored_url.last_checked|date:"d/m/Y H:i" }}{% else %}Nunca{% endif %}
+    </p>
+
+  </main>
+</body>
+</html>

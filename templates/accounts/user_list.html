@@ -1,0 +1,142 @@
+{% extends 'base_app.html' %}
+{% block title %}Usuarios — URLMonitor{% endblock %}
+{% block page_title %}Usuarios{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Gestión de usuarios</h1>
+    <p class="text-gray-500 text-sm mt-1">{{ users|length }} usuario{{ users|length|pluralize }} registrado{{ users|length|pluralize }}</p>
+  </div>
+  <div class="flex gap-3">
+    <a href="{% url 'user_form' 'usuario' %}"
+      class="inline-flex items-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-xl font-medium text-sm transition shadow-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+      Crear Usuario
+    </a>
+    <a href="{% url 'user_form' 'admin' %}"
+      class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition shadow-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      Crear Administrador
+    </a>
+  </div>
+</div>
+
+<!-- Tabla -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+  {% if users %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Usuario</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Correo</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Rol</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Registrado</th>
+          <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for u in users %}
+        <tr class="hover:bg-gray-50 transition">
+
+          <!-- Avatar + username -->
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 font-bold text-xs
+                {% if u.is_superuser %}bg-indigo-100 text-indigo-700
+                {% elif u.is_staff %}bg-purple-100 text-purple-700
+                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                {{ u.username|first|upper }}
+              </div>
+              <div>
+                <p class="font-semibold text-gray-900">{{ u.username }}</p>
+                {% if u == request.user %}
+                <span class="text-xs text-indigo-500 font-medium">(tú)</span>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+
+          <!-- Email -->
+          <td class="px-6 py-4 text-gray-500 hidden sm:table-cell">
+            {{ u.email|default:"—" }}
+          </td>
+
+          <!-- Rol -->
+          <td class="px-6 py-4">
+            {% if u.is_superuser %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Administrador
+            </span>
+            {% elif u.is_staff %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
+              Staff
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              Usuario
+            </span>
+            {% endif %}
+          </td>
+
+          <!-- Fecha -->
+          <td class="px-6 py-4 text-gray-500 hidden md:table-cell">
+            {{ u.date_joined|date:"d/m/Y" }}
+          </td>
+
+          <!-- Estado activo -->
+          <td class="px-6 py-4">
+            {% if u.is_active %}
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+              Activo
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+              <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+              Inactivo
+            </span>
+            {% endif %}
+          </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="py-20 text-center">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+    <p class="text-gray-400 text-sm">No hay usuarios registrados.</p>
+    <a href="{% url 'user_form' 'usuario' %}"
+      class="mt-4 inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm transition">
+      + Crear primer usuario
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

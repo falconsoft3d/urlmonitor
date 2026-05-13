@@ -1,0 +1,311 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ monitored_url.name }} — URLMonitor{% endblock %}
+{% block page_title %}Detalle de URL{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-sm text-gray-400">
+    <a href="{% url 'url_list' %}" class="hover:text-indigo-600 transition">Mis URLs</a>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <span class="text-gray-600 font-medium">{{ monitored_url.name }}</span>
+  </nav>
+
+  <!-- URL info card -->
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-3 mb-1">
+          <span class="inline-block w-2.5 h-2.5 rounded-full {{ monitored_url.status_dot_classes }} shrink-0"></span>
+          <h1 class="text-xl font-bold text-gray-900 truncate">{{ monitored_url.name }}</h1>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ monitored_url.status_badge_classes }}">
+            {{ monitored_url.get_status_display }}
+          </span>
+        </div>
+        <a href="{{ monitored_url.url }}" target="_blank" rel="noopener noreferrer"
+          class="text-indigo-600 hover:underline text-sm break-all">
+          {{ monitored_url.url }}
+        </a>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-2 shrink-0 flex-wrap">
+        <a href="{% url 'url_check' monitored_url.pk %}?next=url_list"
+          class="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Verificar ahora
+        </a>
+
+        <!-- Share button -->
+        <button onclick="document.getElementById('share-modal').classList.remove('hidden')"
+          class="inline-flex items-center gap-1.5 px-3 py-2 {% if monitored_url.is_public %}bg-green-50 border border-green-200 text-green-700{% else %}bg-white border border-gray-200 text-gray-700{% endif %} text-sm font-medium rounded-xl hover:bg-gray-50 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+          </svg>
+          {% if monitored_url.is_public %}Pública{% else %}Compartir{% endif %}
+        </button>
+
+        <a href="{% url 'url_edit' monitored_url.pk %}"
+          class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          Editar
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t border-gray-100">
+      <div>
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Código HTTP</p>
+        <p class="text-lg font-bold text-gray-800 font-mono">
+          {% if monitored_url.status_code %}{{ monitored_url.status_code }}{% else %}&mdash;{% endif %}
+        </p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Tiempo respuesta</p>
+        <p class="text-lg font-bold text-gray-800">
+          {% if monitored_url.response_time %}{{ monitored_url.response_time }} ms{% else %}&mdash;{% endif %}
+        </p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Última verificación</p>
+        <p class="text-sm font-semibold text-gray-800">
+          {% if monitored_url.last_checked %}{{ monitored_url.last_checked|date:"d/m/Y H:i" }}{% else %}Nunca{% endif %}
+        </p>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Creado</p>
+        <p class="text-sm font-semibold text-gray-800">{{ monitored_url.created_at|date:"d/m/Y" }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  {% if total_checks %}
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+    <!-- Uptime -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <p class="text-xs text-gray-400 uppercase tracking-wide mb-3">Disponibilidad</p>
+      <div class="flex items-end gap-2">
+        <span class="text-3xl font-extrabold {% if uptime_pct >= 99 %}text-green-600{% elif uptime_pct >= 90 %}text-yellow-500{% else %}text-red-500{% endif %}">
+          {{ uptime_pct }}%
+        </span>
+      </div>
+      <!-- mini bar -->
+      <div class="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div class="h-full rounded-full {% if uptime_pct >= 99 %}bg-green-500{% elif uptime_pct >= 90 %}bg-yellow-400{% else %}bg-red-500{% endif %}"
+          style="width: {{ uptime_pct }}%"></div>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">{{ total_ok }} de {{ total_checks }} checks OK</p>
+    </div>
+
+    <!-- Total caídas -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <p class="text-xs text-gray-400 uppercase tracking-wide mb-3">Total caídas</p>
+      <p class="text-3xl font-extrabold {% if total_fail == 0 %}text-green-600{% elif total_fail < 5 %}text-yellow-500{% else %}text-red-600{% endif %}">
+        {{ total_fail }}
+      </p>
+      <p class="text-xs text-gray-400 mt-2">errores registrados</p>
+    </div>
+
+    <!-- Checks totales -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <p class="text-xs text-gray-400 uppercase tracking-wide mb-3">Verificaciones</p>
+      <p class="text-3xl font-extrabold text-gray-800">{{ total_checks }}</p>
+      <p class="text-xs text-gray-400 mt-2">total realizadas</p>
+    </div>
+
+    <!-- Promedio respuesta -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <p class="text-xs text-gray-400 uppercase tracking-wide mb-3">Respuesta promedio</p>
+      <p class="text-3xl font-extrabold text-gray-800">
+        {% if avg_response %}{{ avg_response }}<span class="text-base font-semibold text-gray-400"> ms</span>{% else %}&mdash;{% endif %}
+      </p>
+      <p class="text-xs text-gray-400 mt-2">sobre checks exitosos</p>
+    </div>
+
+  </div>
+
+  <!-- Últimas caídas -->
+  {% if last_failures %}
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856C18.07 19 19 17.657 19 16.122V9.878c0-1.535-.929-2.878-2.082-2.878H7.082C5.929 7 5 8.343 5 9.878v6.244C5 17.657 5.93 19 7.062 19z"/>
+      </svg>
+      <h3 class="text-sm font-bold text-gray-800">Últimas caídas detectadas</h3>
+      <span class="ml-auto text-xs text-gray-400">{{ total_fail }} en total</span>
+    </div>
+    <ul class="divide-y divide-gray-50">
+      {% for fail in last_failures %}
+      <li class="px-5 py-3 flex items-center gap-4">
+        <div class="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-800">{{ fail.checked_at|date:"d/m/Y" }} <span class="text-gray-500 font-normal">{{ fail.checked_at|time:"H:i:s" }}</span></p>
+          <p class="text-xs text-gray-400 mt-0.5">
+            {% if fail.error %}{{ fail.error }}{% elif fail.status_code %}HTTP {{ fail.status_code }}{% else %}Sin respuesta{% endif %}
+          </p>
+        </div>
+        {% if fail.status_code %}
+        <span class="text-xs font-mono font-bold text-red-600 bg-red-50 px-2 py-1 rounded-lg shrink-0">{{ fail.status_code }}</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <!-- Logs -->
+  <div>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-base font-bold text-gray-800">Logs de verificación</h2>
+      <span class="text-xs text-gray-400">Últimos {{ logs|length }} registros</span>
+    </div>
+
+    {% if logs %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-100">
+            <th class="text-left px-5 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Fecha</th>
+            <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Estado</th>
+            <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Código</th>
+            <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Respuesta</th>
+            <th class="text-left px-4 py-3 font-semibold text-gray-500 uppercase tracking-wide text-xs">Error</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for log in logs %}
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-5 py-3 text-gray-600 whitespace-nowrap">
+              {{ log.checked_at|date:"d/m/Y" }}
+              <span class="text-gray-400 text-xs block">{{ log.checked_at|time:"H:i:s" }}</span>
+            </td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ log.status_badge_classes }}">
+                {{ log.status_label }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-gray-700 font-mono">
+              {% if log.status_code %}{{ log.status_code }}{% else %}&mdash;{% endif %}
+            </td>
+            <td class="px-4 py-3 text-gray-600">
+              {% if log.response_time %}{{ log.response_time }} ms{% else %}&mdash;{% endif %}
+            </td>
+            <td class="px-4 py-3 text-red-500 text-xs">
+              {% if log.error %}{{ log.error }}{% else %}&mdash;{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl border border-gray-100 py-12 text-center">
+      <p class="text-gray-400 text-sm">Aún no hay verificaciones para esta URL.</p>
+      <a href="{% url 'url_check' monitored_url.pk %}?next=url_list"
+        class="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition">
+        Verificar ahora
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- ===== Share modal ===== -->
+<div id="share-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="document.getElementById('share-modal').classList.add('hidden')"></div>
+
+  <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6 z-10">
+    <div class="flex items-start justify-between mb-5">
+      <div>
+        <h3 class="text-base font-bold text-gray-900">Compartir página pública</h3>
+        <p class="text-sm text-gray-500 mt-0.5">El cliente podrá ver el estado y el historial de caídas sin necesitar cuenta.</p>
+      </div>
+      <button onclick="document.getElementById('share-modal').classList.add('hidden')"
+        class="text-gray-400 hover:text-gray-600 ml-3 shrink-0 mt-0.5">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2 mb-4">
+      <span class="w-2.5 h-2.5 rounded-full {% if monitored_url.is_public %}bg-green-500{% else %}bg-gray-300{% endif %} shrink-0"></span>
+      <span class="text-sm font-medium {% if monitored_url.is_public %}text-green-700{% else %}text-gray-500{% endif %}">
+        {% if monitored_url.is_public %}Acceso público activo{% else %}Acceso público desactivado{% endif %}
+      </span>
+    </div>
+
+    {% if monitored_url.is_public %}
+    <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-4">
+      <input id="public-url-input" type="text" readonly
+        value="{{ request.scheme }}://{{ request.get_host }}{% url 'url_public' monitored_url.public_token %}"
+        class="flex-1 bg-transparent text-sm text-gray-700 outline-none truncate min-w-0" />
+      <button onclick="copyPublicUrl()" id="copy-btn"
+        class="shrink-0 text-indigo-600 hover:text-indigo-800 transition" title="Copiar">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+      </button>
+    </div>
+    <a href="{% url 'url_public' monitored_url.public_token %}" target="_blank" rel="noopener"
+      class="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:underline mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+      </svg>
+      Ver como cliente
+    </a>
+    {% endif %}
+
+    <form method="post" action="{% url 'url_toggle_public' monitored_url.pk %}">
+      {% csrf_token %}
+      <button type="submit"
+        class="w-full py-2.5 rounded-xl text-sm font-semibold transition
+               {% if monitored_url.is_public %}bg-red-50 text-red-600 hover:bg-red-100 border border-red-200{% else %}bg-indigo-600 text-white hover:bg-indigo-700{% endif %}">
+        {% if monitored_url.is_public %}Desactivar acceso público{% else %}Activar acceso público{% endif %}
+      </button>
+    </form>
+
+    <p class="text-xs text-gray-400 mt-3 text-center">
+      El enlace usa un token único — no revela tu cuenta ni datos internos.
+    </p>
+  </div>
+</div>
+
+<script>
+function copyPublicUrl() {
+  const input = document.getElementById('public-url-input');
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(input.value).then(() => {
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+    setTimeout(() => {
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>';
+    }, 2000);
+  });
+}
+</script>
+
+{% endblock %}

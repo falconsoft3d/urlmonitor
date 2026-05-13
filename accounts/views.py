@@ -1,8 +1,15 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout, authenticate
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
 from django.contrib import messages
-from .forms import RegisterForm
+from .forms import RegisterForm, ProfileDataForm, AvatarForm, StyledPasswordChangeForm
+from .models import UserProfile
+
+
+def staff_required(user):
+    return user.is_active and user.is_staff
 
 INPUT_CLASSES = (
     'w-full border border-gray-300 rounded-lg px-4 py-2.5 text-gray-900 '
@@ -70,3 +77,89 @@ def logout_view(request):
         logout(request)
         messages.info(request, 'Has cerrado sesión exitosamente.')
     return redirect('home')
+
+
+@login_required
+@user_passes_test(staff_required)
+def user_list_view(request):
+    users = User.objects.all().order_by('-date_joined')
+    return render(request, 'accounts/user_list.html', {'users': users})
+
+
+@login_required
+@user_passes_test(staff_required)
+def user_form_view(request, role):
+    """
+    Vista reutilizable de formulario.
+    role = 'admin' → crea superusuario con is_staff
+    role = 'usuario' → crea usuario estándar
+    """
+    if role not in ('admin', 'usuario'):
+        return redirect('user_list')
+
+    role_label = 'Administrador' if role == 'admin' else 'Usuario'
+
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            if role == 'admin':
+                user.is_staff = True
+                user.is_superuser = True
+            user.save()
+            messages.success(request, f'{role_label} «{user.username}» creado exitosamente.')
+            return redirect('user_list')
+    else:
+        form = RegisterForm()
+
+    return render(request, 'accounts/user_form.html', {
+        'form': form,
+        'role': role,
+        'role_label': role_label,
+    })
+
+
+@login_required
+def profile_view(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    tab = request.GET.get('tab', 'datos')
+
+    data_form = ProfileDataForm(instance=request.user)
+    password_form = StyledPasswordChangeForm(user=request.user)
+    avatar_form = AvatarForm(instance=profile)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'datos':
+            data_form = ProfileDataForm(request.POST, instance=request.user)
+            if data_form.is_valid():
+                data_form.save()
+                messages.success(request, 'Datos actualizados correctamente.')
+                return redirect(f'{request.path}?tab=datos')
+            tab = 'datos'
+
+        elif action == 'password':
+            password_form = StyledPasswordChangeForm(user=request.user, data=request.POST)
+            if password_form.is_valid():
+                password_form.save()
+                update_session_auth_hash(request, password_form.user)
+                messages.success(request, 'Contraseña actualizada correctamente.')
+                return redirect(f'{request.path}?tab=password')
+            tab = 'password'
+
+        elif action == 'avatar':
+            avatar_form = AvatarForm(request.POST, request.FILES, instance=profile)
+            if avatar_form.is_valid():
+                avatar_form.save()
+                messages.success(request, 'Imagen de perfil actualizada.')
+                return redirect(f'{request.path}?tab=avatar')
+            tab = 'avatar'
+
+    return render(request, 'accounts/profile.html', {
+        'data_form': data_form,
+        'password_form': password_form,
+        'avatar_form': avatar_form,
+        'profile': profile,
+        'tab': tab,
+    })

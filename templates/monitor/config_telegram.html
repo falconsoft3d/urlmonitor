@@ -1,0 +1,121 @@
+{% extends "base_app.html" %}
+
+{% block title %}Telegram — URLMonitor{% endblock %}
+{% block page_title %}Configuración — Telegram{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+
+  <!-- Breadcrumb -->
+  <nav class="flex items-center gap-2 text-sm text-gray-400 mb-6">
+    <span class="text-gray-600 font-medium">Administración</span>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <span class="text-indigo-600 font-semibold">Telegram</span>
+  </nav>
+
+  <!-- Config tabs -->
+  <div class="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
+    <a href="{% url 'config_schedule' %}"
+      class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-700 transition">
+      Programación
+    </a>
+    <a href="{% url 'config_telegram' %}"
+      class="px-4 py-2 rounded-lg text-sm font-medium bg-white text-indigo-700 shadow-sm">
+      Telegram
+    </a>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
+
+      <!-- Header -->
+      <div class="px-6 py-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <!-- Telegram icon -->
+          <div class="w-10 h-10 rounded-xl bg-[#229ED9] flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 24 24" fill="white" class="h-6 w-6">
+              <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-gray-800">Notificaciones por Telegram</h2>
+            <p class="text-sm text-gray-500 mt-0.5">Recibe alertas cuando una URL deje de responder.</p>
+          </div>
+        </div>
+        {% if config.telegram_enabled %}
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span> Activo
+        </span>
+        {% else %}
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
+          <span class="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span> Inactivo
+        </span>
+        {% endif %}
+      </div>
+
+      <!-- Enable toggle -->
+      <div class="px-6 py-5">
+        <label class="flex items-center gap-4 cursor-pointer select-none">
+          {{ form.telegram_enabled }}
+          <div>
+            <p class="text-sm font-semibold text-gray-800">{{ form.telegram_enabled.label }}</p>
+            <p class="text-xs text-gray-400 mt-0.5">Se enviará un mensaje cuando el estado de una URL cambie a caída.</p>
+          </div>
+        </label>
+      </div>
+
+      <!-- Bot token -->
+      <div class="px-6 py-5">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          {{ form.telegram_bot_token.label }}
+        </label>
+        {{ form.telegram_bot_token }}
+        <p class="text-xs text-gray-400 mt-2">
+          Obtenlo hablando con
+          <a href="https://t.me/BotFather" target="_blank" rel="noopener" class="text-indigo-600 hover:underline">@BotFather</a>
+          en Telegram. Formato: <code class="bg-gray-100 px-1 rounded text-gray-600">123456789:ABC...</code>
+        </p>
+      </div>
+
+      <!-- Chat ID -->
+      <div class="px-6 py-5">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">
+          {{ form.telegram_chat_id.label }}
+        </label>
+        {{ form.telegram_chat_id }}
+        <p class="text-xs text-gray-400 mt-2">
+          Para grupos usa el ID negativo (ej. <code class="bg-gray-100 px-1 rounded text-gray-600">-1001234567890</code>).
+          Para obtenerlo, agrega tu bot al grupo y visita
+          <code class="bg-gray-100 px-1 rounded text-gray-600">https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>.
+        </p>
+      </div>
+
+      <!-- How it works -->
+      <div class="px-6 py-4 bg-sky-50 rounded-b-2xl">
+        <p class="text-xs font-semibold text-sky-700 mb-2">¿Cómo configurarlo?</p>
+        <ol class="text-xs text-sky-700 space-y-1 list-decimal list-inside">
+          <li>Crea un bot con <strong>@BotFather</strong> → obtén el <strong>Token</strong>.</li>
+          <li>Crea o usa un grupo de Telegram → agrega tu bot como miembro.</li>
+          <li>Obtén el <strong>ID del grupo</strong> usando <code class="bg-sky-100 px-1 rounded">getUpdates</code>.</li>
+          <li>Pega los valores aquí, activa las notificaciones y guarda.</li>
+        </ol>
+      </div>
+
+    </div>
+
+    <div class="mt-4 flex justify-end">
+      <button type="submit"
+        class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Guardar configuración
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

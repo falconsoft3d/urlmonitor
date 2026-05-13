@@ -1,0 +1,57 @@
+services:
+
+  web:
+    build: .
+    image: urlmonitor:latest
+    container_name: urlmonitor_web
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - sqlite_data:/app/db.sqlite3
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+    expose:
+      - "8000"
+    depends_on: []
+    networks:
+      - urlmonitor_net
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: urlmonitor_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/certbot/conf:/etc/letsencrypt:ro
+      - ./nginx/certbot/www:/var/www/certbot:ro
+      - static_data:/app/staticfiles:ro
+      - media_data:/app/media:ro
+    depends_on:
+      - web
+    networks:
+      - urlmonitor_net
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: urlmonitor_certbot
+    volumes:
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    entrypoint: >
+      sh -c "trap exit TERM;
+             while :; do
+               certbot renew --webroot -w /var/www/certbot --quiet;
+               sleep 12h & wait $!;
+             done"
+
+volumes:
+  sqlite_data:
+  media_data:
+  static_data:
+
+networks:
+  urlmonitor_net:
+    driver: bridge

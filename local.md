@@ -10,7 +10,7 @@
 ## 1. Clonar / ubicarse en el proyecto
 
 ```bash
-cd /ruta/al/proyecto/uproject
+cd /ruta/al/proyecto/urlmonitor
 ```
 
 ## 2. Crear y activar el entorno virtual
@@ -65,6 +65,11 @@ La aplicación estará disponible en: **http://127.0.0.1:8000**
 | `/urls/<id>/eliminar/`  | Eliminar URL                       |
 | `/urls/<id>/verificar/` | Verificar estado de una URL        |
 | `/urls/verificar-todas/`| Verificar todas las URLs           |
+| `/logs/`                | Historial de verificaciones        |
+| `/urls/<id>/detalle/`   | Detalle + métricas de una URL      |
+| `/public/<token>/`      | Página pública de estado (sin login) |
+| `/config/verificacion/` | Configuración del scheduler        |
+| `/config/telegram/`     | Configuración de alertas Telegram  |
 | `/admin/`               | Panel de administración de Django  |
 
 ---
