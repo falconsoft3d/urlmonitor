@@ -167,7 +167,7 @@ curl -I http://urlmonitor.xyz/.well-known/acme-challenge/test
 ### 7c. Emitir el certificado
 
 ```bash
-docker compose run --rm certbot certonly \
+docker compose run --rm --entrypoint certbot certbot certonly \
   --webroot \
   --webroot-path /var/www/certbot \
   --email admin@urlmonitor.xyz \
