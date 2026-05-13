@@ -19,7 +19,7 @@ def _run_check():
     for url in urls:
         _do_check(url)
         url.last_checked = timezone.now()
-        url.save(update_fields=['status', 'status_code', 'response_time', 'last_checked', 'updated_at'])
+        url.save(update_fields=['status', 'status_code', 'response_time', 'last_checked', 'updated_at', 'telegram_alerted'])
         count += 1
     logger.info('Auto-check completado: %d URLs verificadas', count)
 

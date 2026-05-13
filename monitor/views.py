@@ -7,7 +7,7 @@ from django.http import JsonResponse
 
 from django.core.paginator import Paginator
 from .models import MonitoredURL, CheckLog, SiteConfig
-from .forms import MonitoredURLForm, ScheduleConfigForm, TelegramConfigForm
+from .forms import MonitoredURLForm, ScheduleConfigForm, TelegramConfigForm, RegistrationConfigForm
 
 # URLs destino seguras para el parámetro "next"
 SAFE_NEXT_URLS = {'url_list', 'dashboard'}
@@ -150,9 +150,14 @@ def _do_check(monitored_url):
         )
         success, detail = False, error_name
 
-    # Notificar por Telegram si el estado cambió a inactivo
-    if monitored_url.status == MonitoredURL.STATUS_INACTIVE and previous_status != MonitoredURL.STATUS_INACTIVE:
-        _send_telegram_alert(monitored_url)
+    # Notificar por Telegram solo en la primera caída (no spamear si sigue caída)
+    if monitored_url.status == MonitoredURL.STATUS_INACTIVE:
+        if not monitored_url.telegram_alerted:
+            _send_telegram_alert(monitored_url)
+            monitored_url.telegram_alerted = True
+    else:
+        # URL volvió a funcionar → resetear para que la próxima caída sí notifique
+        monitored_url.telegram_alerted = False
 
     return success, detail
 
@@ -272,6 +277,21 @@ def config_telegram(request):
     else:
         form = TelegramConfigForm(instance=config)
     return render(request, 'monitor/config_telegram.html', {'form': form, 'config': config})
+
+
+@login_required
+@user_passes_test(_staff_required)
+def config_users(request):
+    config = SiteConfig.get()
+    if request.method == 'POST':
+        form = RegistrationConfigForm(request.POST, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Configuración de usuarios guardada.')
+            return redirect('config_users')
+    else:
+        form = RegistrationConfigForm(instance=config)
+    return render(request, 'monitor/config_users.html', {'form': form, 'config': config})
 
 
 @login_required

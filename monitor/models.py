@@ -33,6 +33,7 @@ class MonitoredURL(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Actualizado')
     public_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     is_public = models.BooleanField(default=False, verbose_name='Página pública activa')
+    telegram_alerted = models.BooleanField(default=False, verbose_name='Alerta Telegram enviada')
 
     class Meta:
         ordering = ['-created_at']
@@ -128,6 +129,7 @@ class SiteConfig(models.Model):
     telegram_bot_token = models.CharField(max_length=300, blank=True, default='', verbose_name='Token del bot')
     telegram_chat_id = models.CharField(max_length=100, blank=True, default='', verbose_name='ID del grupo/chat')
     telegram_enabled = models.BooleanField(default=False, verbose_name='Notificaciones Telegram activas')
+    registration_enabled = models.BooleanField(default=True, verbose_name='Registro de nuevos usuarios activo')
 
     class Meta:
         verbose_name = 'Configuración del sitio'
