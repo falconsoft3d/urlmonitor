@@ -54,6 +54,32 @@
     .animate-pulse-ring {
       animation: pulse-ring 1.4s ease-in-out infinite;
     }
+    /* Scheduler button press effect */
+    .sched-btn:active,
+    .sched-btn.pressing {
+      transform: scale(0.91) !important;
+    }
+    .sched-btn.pressing .sched-inner-bg {
+      background-color: rgba(99, 102, 241, 0.9) !important;
+    }
+    /* Indeterminate progress bar */
+    @keyframes progress-indeterminate {
+      0%   { transform: translateX(-100%) scaleX(0.4); }
+      50%  { transform: translateX(0%)    scaleX(0.6); }
+      100% { transform: translateX(100%) scaleX(0.4); }
+    }
+    .animate-progress-indeterminate {
+      animation: progress-indeterminate 1.4s ease-in-out infinite;
+      transform-origin: left center;
+    }
+    /* Toast slide-in */
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateX(1.5rem); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .toast-enter {
+      animation: toast-in 0.25s ease-out forwards;
+    }
   </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 min-h-screen transition-colors duration-200">
@@ -146,14 +172,18 @@
 
     <form method="post" action="{% url 'url_check_all' %}">
       {% csrf_token %}
-      <button type="submit" data-tip="Verificar todas"
+      <button type="submit" data-check-all data-tip="Verificar todas"
         class="sb-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                text-indigo-200 hover:bg-indigo-800 hover:text-white transition cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg class="check-icon h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        <span class="sb-label">Verificar todas</span>
+        <svg class="check-spinner hidden animate-spin h-5 w-5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <span class="sb-label check-label">Verificar todas</span>
       </button>
     </form>
 
@@ -226,7 +256,8 @@
       <!-- SVG ring (clickable → verificar todas) -->
       <a href="{% url 'url_check_all' %}"
          title="Verificar todas ahora"
-         class="relative w-24 h-24 block group cursor-pointer">
+         class="relative w-24 h-24 block group cursor-pointer sched-btn"
+         style="transition: transform 0.1s ease;">
         <svg class="w-24 h-24 -rotate-90" viewBox="0 0 80 80">
           <!-- track -->
           <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="6"/>
@@ -239,12 +270,19 @@
             class="group-hover:stroke-indigo-300 transition-colors"
             style="transition: stroke-dashoffset 1s linear;"/>
         </svg>
+        <!-- inner circle background (cambia en hover/press) -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div class="w-14 h-14 rounded-full bg-indigo-800/60
+                      group-hover:bg-indigo-600/80
+                      transition-colors duration-150
+                      sched-inner-bg"></div>
+        </div>
         <!-- center label -->
-        <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <span id="sched-mins" class="text-white text-2xl font-bold leading-none group-hover:hidden">--</span>
           <span class="text-indigo-300 text-[10px] font-medium mt-0.5 group-hover:hidden">min</span>
           <!-- Play icon on hover -->
-          <svg class="hidden group-hover:block h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+          <svg class="hidden group-hover:block h-8 w-8 text-white drop-shadow" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z"/>
           </svg>
         </div>
@@ -301,7 +339,7 @@
             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
         </svg>
         <div class="leading-none">
-          <span class="text-sm font-bold text-indigo-700 dark:text-indigo-300">{{ checks_today }}</span>
+          <span id="checks-today-count" class="text-sm font-bold text-indigo-700 dark:text-indigo-300">{{ checks_today }}</span>
           <span class="text-xs text-indigo-500 dark:text-indigo-400 ml-1">revisiones hoy</span>
         </div>
       </a>
@@ -402,21 +440,40 @@
     </div>
   </header>
 
-  <!-- Flash messages -->
+  <!-- Flash messages → toasts superiores -->
   {% if messages %}
-  <div class="px-4 sm:px-6 pt-4 space-y-2">
+  <div id="django-toasts" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none">
     {% for message in messages %}
-    <div class="flex items-center justify-between px-4 py-3 rounded-lg border text-sm
-      {% if message.tags == 'success' %}bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-700
-      {% elif message.tags == 'error' %}bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-700
-      {% elif message.tags == 'warning' %}bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700
-      {% else %}bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-700{% endif %}">
-      <span>{{ message }}</span>
-      <button onclick="this.parentElement.remove()" class="ml-4 opacity-50 hover:opacity-100 text-lg leading-none">&times;</button>
+    <div class="pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium max-w-sm
+      {% if message.tags == 'success' %}bg-white dark:bg-gray-800 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700
+      {% elif message.tags == 'error' %}bg-white dark:bg-gray-800 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700
+      {% elif message.tags == 'warning' %}bg-white dark:bg-gray-800 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700
+      {% else %}bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700{% endif %}">
+      <span class="flex-1">{{ message }}</span>
+      <button onclick="this.closest('[class*=border]').remove()" class="opacity-40 hover:opacity-100 text-lg leading-none mt-0.5">&times;</button>
     </div>
     {% endfor %}
   </div>
+  <script>
+    // Auto-dismiss Django toasts after 5s
+    (function () {
+      var c = document.getElementById('django-toasts');
+      if (!c) return;
+      setTimeout(function () {
+        Array.from(c.children).forEach(function (el) {
+          el.style.transition = 'opacity 0.4s';
+          el.style.opacity = '0';
+          setTimeout(function () { el.remove(); }, 420);
+        });
+      }, 5000);
+    })();
+  </script>
   {% endif %}
+
+  <!-- Progress bar (verificación en curso) -->
+  <div id="verify-progress-bar" class="hidden h-1 w-full bg-indigo-100 dark:bg-indigo-900 overflow-hidden">
+    <div class="h-full bg-indigo-500 animate-progress-indeterminate"></div>
+  </div>
 
   <!-- Page content -->
   <main class="flex-1 px-4 sm:px-6 py-8">
@@ -520,7 +577,8 @@
       if (remainSecs === 0) {
         statusEl.textContent = 'Verificando ahora…';
         ring.style.stroke = '#34d399';   // green flash
-        setTimeout(fetchStatus, 3000);   // re-fetch after 3s
+        setTimeout(fetchStatus, 3000);              // re-fetch ring after 3s
+        setTimeout(window.urlmonitorRefreshCounter || function(){}, 6000); // actualiza contador tras ~6s
       }
     }
 
@@ -554,10 +612,122 @@
     fetchStatus();
     setInterval(fetchStatus, 30000);
     ticker = setInterval(tick, 1000);
+
+    // ── Efecto de presión en el botón circular ──
+    (function () {
+      const btn = document.querySelector('.sched-btn');
+      if (!btn) return;
+      btn.addEventListener('mousedown', function () { btn.classList.add('pressing'); });
+      btn.addEventListener('touchstart', function () { btn.classList.add('pressing'); }, { passive: true });
+      ['mouseup', 'mouseleave', 'touchend'].forEach(function (ev) {
+        btn.addEventListener(ev, function () { btn.classList.remove('pressing'); });
+      });
+    })();
   })();
 </script>
 
 {% block extra_js %}{% endblock %}
+
+<script>
+  // ===== Verificar todas — AJAX + spinner + contador en tiempo real =====
+  (function () {
+    const CSRF = '{{ csrf_token }}';
+    const AJAX_URL = '{% url "url_check_all_ajax" %}';
+    const COUNTER_URL = '{% url "checks_today_json" %}';
+    const counterEl = document.getElementById('checks-today-count');
+
+    // ── Auto-refrescar contador cada 15 s ──
+    function refreshCounter() {
+      fetch(COUNTER_URL)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data && counterEl) counterEl.textContent = data.checks_today; })
+        .catch(() => {});
+    }
+    // Exponer globalmente para que el scheduler widget pueda llamarla
+    window.urlmonitorRefreshCounter = refreshCounter;
+    setInterval(refreshCounter, 15000);
+
+    // ── Contenedor de toasts (superior derecho) ──
+    let toastContainer = document.getElementById('js-toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'js-toast-container';
+      toastContainer.className = 'fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none';
+      document.body.appendChild(toastContainer);
+    }
+
+    function showToast(text, type) {
+      // type: 'success' | 'error' | 'warning'
+      const isError   = type === 'error';
+      const isWarning = type === 'warning';
+      const palette = isError
+        ? 'text-red-700 dark:text-red-300 border-red-200 dark:border-red-700'
+        : isWarning
+          ? 'text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700'
+          : 'text-green-700 dark:text-green-300 border-green-200 dark:border-green-700';
+      const icon = isError
+        ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+        : isWarning
+          ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+      const t = document.createElement('div');
+      t.className = 'toast-enter pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium max-w-sm bg-white dark:bg-gray-800 ' + palette;
+      t.innerHTML = icon + '<span class="flex-1">' + text + '</span><button class="opacity-40 hover:opacity-100 text-lg leading-none mt-0.5" onclick="this.closest(\'div\').remove()">&times;</button>';
+      toastContainer.appendChild(t);
+      setTimeout(function () {
+        t.style.transition = 'opacity 0.4s';
+        t.style.opacity = '0';
+        setTimeout(function () { t.remove(); }, 420);
+      }, 5000);
+    }
+
+    // ── Interceptar todos los formularios "Verificar todas" ──
+    document.querySelectorAll('form[action*="verificar-todas"]').forEach(function (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const btn = form.querySelector('button[data-check-all]');
+        if (!btn || btn.disabled) return;
+
+        const progressBar = document.getElementById('verify-progress-bar');
+
+        // Mostrar spinner + barra de progreso
+        btn.disabled = true;
+        btn.querySelectorAll('.check-icon').forEach(el => el.classList.add('hidden'));
+        btn.querySelectorAll('.check-spinner').forEach(el => el.classList.remove('hidden'));
+        btn.querySelectorAll('.check-label').forEach(el => { el.dataset.orig = el.textContent; el.textContent = 'Verificando…'; });
+        if (progressBar) progressBar.classList.remove('hidden');
+
+        function restoreBtn() {
+          btn.disabled = false;
+          btn.querySelectorAll('.check-icon').forEach(el => el.classList.remove('hidden'));
+          btn.querySelectorAll('.check-spinner').forEach(el => el.classList.add('hidden'));
+          btn.querySelectorAll('.check-label').forEach(el => { el.textContent = el.dataset.orig || 'Verificar todas'; });
+          if (progressBar) progressBar.classList.add('hidden');
+        }
+
+        fetch(AJAX_URL, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+        })
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+          .then(function (data) {
+            restoreBtn();
+            if (data.ok) {
+              if (counterEl) counterEl.textContent = data.checks_today;
+              const n = data.checked;
+              showToast('Se verificaron ' + n + ' URL' + (n !== 1 ? 's' : '') + ' exitosamente.');
+            } else {
+              showToast('Error al verificar las URLs.', 'error');
+            }
+          })
+          .catch(function () {
+            restoreBtn();
+            showToast('Error de conexión al verificar.', 'error');
+          });
+      });
+    });
+  })();
+</script>
 
 <script>
   // ===== Dark mode toggle =====

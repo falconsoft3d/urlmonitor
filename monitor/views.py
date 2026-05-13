@@ -235,6 +235,43 @@ def url_check_all(request):
 
 
 @login_required
+def url_check_all_ajax(request):
+    """AJAX: verifica todas las URLs y devuelve JSON con el conteo actualizado."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    urls = _url_qs(request)
+    checked = 0
+    for monitored_url in urls:
+        _do_check(monitored_url)
+        monitored_url.last_checked = timezone.now()
+        monitored_url.save()
+        checked += 1
+    today = timezone.now().date()
+    if request.user.is_staff:
+        checks_today_count = CheckLog.objects.filter(checked_at__date=today).count()
+    else:
+        checks_today_count = CheckLog.objects.filter(
+            checked_at__date=today,
+            monitored_url__users=request.user,
+        ).count()
+    return JsonResponse({'ok': True, 'checked': checked, 'checks_today': checks_today_count})
+
+
+@login_required
+def checks_today_json(request):
+    """JSON endpoint para el contador de revisiones de hoy."""
+    today = timezone.now().date()
+    if request.user.is_staff:
+        count = CheckLog.objects.filter(checked_at__date=today).count()
+    else:
+        count = CheckLog.objects.filter(
+            checked_at__date=today,
+            monitored_url__users=request.user,
+        ).count()
+    return JsonResponse({'checks_today': count})
+
+
+@login_required
 def url_check_ajax(request, pk):
     """Verifica una URL y devuelve el resultado en JSON (para Verificar todas animado)."""
     if request.method != 'POST':
