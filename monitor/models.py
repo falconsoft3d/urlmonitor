@@ -34,6 +34,7 @@ class MonitoredURL(models.Model):
     public_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     is_public = models.BooleanField(default=False, verbose_name='Página pública activa')
     telegram_alerted = models.BooleanField(default=False, verbose_name='Alerta Telegram enviada')
+    monitoring_enabled = models.BooleanField(default=True, verbose_name='Chequeo activo')
 
     class Meta:
         ordering = ['-created_at']

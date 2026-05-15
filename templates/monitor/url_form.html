@@ -36,6 +36,25 @@
 
       <div class="space-y-5">
         {% for field in form %}
+        {% if field.name == 'monitoring_enabled' %}
+        <div class="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50">
+          <div>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Chequeo activo</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Si está desactivado, esta URL no se verificará automáticamente</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
+            {{ field }}
+            <span class="toggle-bg ml-2 w-11 h-6 bg-gray-200 dark:bg-gray-600 rounded-full peer
+              peer-checked:bg-indigo-600 peer-focus:ring-2 peer-focus:ring-indigo-400
+              after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+              after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+              peer-checked:after:translate-x-5"></span>
+          </label>
+          {% if field.errors %}
+          <p class="mt-1 text-xs text-red-600">{{ field.errors|join:', ' }}</p>
+          {% endif %}
+        </div>
+        {% else %}
         <div>
           <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {{ field.label }}
@@ -45,6 +64,7 @@
           <p class="mt-1 text-xs text-red-600">{{ field.errors|join:', ' }}</p>
           {% endif %}
         </div>
+        {% endif %}
         {% endfor %}
       </div>
 
@@ -82,6 +102,26 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+  /* Ocultar el checkbox nativo del toggle */
+  input.monitoring-toggle { position: absolute; opacity: 0; width: 0; height: 0; }
+  /* Reposicionar el pseudo-elemento after correctamente */
+  .toggle-bg { position: relative; display: inline-block; }
+  .toggle-bg::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  input.monitoring-toggle:checked + .toggle-bg { background-color: #4f46e5; }
+  input.monitoring-toggle:checked + .toggle-bg::after { transform: translateX(20px); }
+  input.monitoring-toggle:focus + .toggle-bg { box-shadow: 0 0 0 2px rgba(99,102,241,.4); }
+</style>
 {% if request.user.is_staff %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>

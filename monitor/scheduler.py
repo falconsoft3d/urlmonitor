@@ -14,7 +14,7 @@ def _run_check():
     from .models import MonitoredURL
     from .views import _do_check
 
-    urls = MonitoredURL.objects.select_related('user').all()
+    urls = MonitoredURL.objects.select_related('user').filter(monitoring_enabled=True)
     count = 0
     for url in urls:
         _do_check(url)

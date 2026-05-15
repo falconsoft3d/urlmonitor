@@ -19,10 +19,11 @@ SELECT_CLASSES = (
 class MonitoredURLForm(forms.ModelForm):
     class Meta:
         model = MonitoredURL
-        fields = ['name', 'url']
+        fields = ['name', 'url', 'monitoring_enabled']
         labels = {
             'name': 'Nombre',
             'url': 'URL',
+            'monitoring_enabled': 'Chequeo activo',
         }
         widgets = {
             'name': forms.TextInput(attrs={
@@ -33,6 +34,9 @@ class MonitoredURLForm(forms.ModelForm):
                 'class': INPUT_CLASSES,
                 'placeholder': 'https://ejemplo.com',
             }),
+            'monitoring_enabled': forms.CheckboxInput(attrs={
+                'class': 'monitoring-toggle',
+            }),
         }
 
 
@@ -40,11 +44,12 @@ class MonitoredURLAdminForm(forms.ModelForm):
     """Igual que MonitoredURLForm pero incluye selector múltiple de usuarios (solo para staff)."""
     class Meta:
         model = MonitoredURL
-        fields = ['users', 'name', 'url']
+        fields = ['users', 'name', 'url', 'monitoring_enabled']
         labels = {
             'users': 'Usuarios propietarios',
             'name': 'Nombre',
             'url': 'URL',
+            'monitoring_enabled': 'Chequeo activo',
         }
         widgets = {
             'users': forms.SelectMultiple(attrs={
@@ -58,6 +63,9 @@ class MonitoredURLAdminForm(forms.ModelForm):
             'url': forms.URLInput(attrs={
                 'class': INPUT_CLASSES,
                 'placeholder': 'https://ejemplo.com',
+            }),
+            'monitoring_enabled': forms.CheckboxInput(attrs={
+                'class': 'monitoring-toggle',
             }),
         }
 
